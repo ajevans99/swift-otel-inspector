@@ -526,18 +526,19 @@ private struct PointWindow: Hashable {
 
 private extension MetricSnapshot {
     var estimatedByteCount: Int {
-        256
-            + id.rawValue.utf8.count
-            + name.utf8.count
-            + description.utf8.count
-            + unit.utf8.count
-            + (resource.schemaURL?.utf8.count ?? 0)
-            + resource.attributes.estimatedByteCount
-            + instrumentationScope.name.utf8.count
-            + (instrumentationScope.version?.utf8.count ?? 0)
-            + (instrumentationScope.schemaURL?.utf8.count ?? 0)
-            + instrumentationScope.attributes.estimatedByteCount
-            + series.reduce(0) { $0 + $1.estimatedByteCount }
+        var byteCount = 256
+        byteCount += id.rawValue.utf8.count
+        byteCount += name.utf8.count
+        byteCount += description.utf8.count
+        byteCount += unit.utf8.count
+        byteCount += resource.schemaURL?.utf8.count ?? 0
+        byteCount += resource.attributes.estimatedByteCount
+        byteCount += instrumentationScope.name.utf8.count
+        byteCount += instrumentationScope.version?.utf8.count ?? 0
+        byteCount += instrumentationScope.schemaURL?.utf8.count ?? 0
+        byteCount += instrumentationScope.attributes.estimatedByteCount
+        byteCount += series.reduce(0) { $0 + $1.estimatedByteCount }
+        return byteCount
     }
 }
 
