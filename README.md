@@ -66,22 +66,60 @@ The package should consume standard OpenTelemetry Swift protocols. Integrations
 with libraries such as `swift-composable-otel` should remain small, optional
 adapters rather than requirements.
 
+`InspectorCore` should own immutable telemetry snapshots rather than expose
+OpenTelemetry SDK types. `InspectorOpenTelemetry` is responsible for converting
+completed SDK spans into those snapshots. This keeps storage and presentation
+stable when the upstream SDK changes.
+
+## Development fixtures
+
+[`fixtures/otlp/sync-trace.json`](fixtures/otlp/sync-trace.json) is a small
+OTLP/HTTP JSON trace for parser development, UI previews, and deterministic
+tests. It models a failed synchronization request across an iOS application and
+an API service, including cross-resource parentage, semantic convention
+attributes, mixed attribute value types, a retry, exception events, a span link,
+and error status propagation.
+
+The fixture is an OTLP export request body and can be submitted directly to a
+generic OTLP/HTTP receiver, such as a local OpenTelemetry Collector. The
+inspector does not provide an OTLP receiver:
+
+```sh
+curl \
+  -H 'Content-Type: application/json' \
+  --data-binary @fixtures/otlp/sync-trace.json \
+  http://localhost:4318/v1/traces
+```
+
 ## Version 0.1: traces
 
-The first useful release should stay deliberately narrow:
+The first useful release should stay deliberately narrow and inspect completed
+spans only. Live or active-span inspection requires lifecycle observation beyond
+the exporter contract and is deferred until after the completed-span experience
+is reliable.
 
 1. Implement an in-memory span exporter.
-2. Store a bounded number of completed spans.
-3. Group spans by trace ID.
-4. Render a list of traces.
-5. Render expandable parent-child span trees.
-6. Show span name, duration, status, service, attributes, events, and timestamps.
-7. Filter traces and spans by name and status.
-8. Provide deterministic tests for ordering, parentage, limits, and concurrent
-   export.
+2. Convert completed spans into immutable, inspector-owned snapshots.
+3. Store snapshots with configurable count, byte, and age limits.
+4. Truncate oversized attribute values before storage.
+5. Group spans by trace ID.
+6. Render a list of traces.
+7. Render expandable parent-child span trees, including orphan spans.
+8. Show span name, duration, status, service, attributes, events, and timestamps.
+9. Filter traces and spans by name and status.
+10. Compose with a remote exporter without changing its sampling, flush,
+    shutdown, or error behavior.
+11. Provide deterministic tests for ordering, parentage, malformed data,
+    eviction, concurrent export, flush, and shutdown.
 
 This is enough to make the package useful while teaching the most important
 OpenTelemetry concepts.
+
+Before implementation begins, the technical spike should establish the minimum
+Swift, Xcode, and platform versions supported by the selected OpenTelemetry Swift
+release. The initial package should declare only platforms exercised in CI;
+additional Apple platforms and Linux support should be added when they have
+build and test coverage.
 
 ## Future roadmap
 
@@ -93,7 +131,6 @@ OpenTelemetry concepts.
 - JSON and OTLP diagnostic bundle export.
 - Attribute allowlists and configurable redaction.
 - Optional encrypted local persistence.
-- Memory and byte budgets in addition to item-count limits.
 - Custom attribute renderers for domain-specific diagnostics.
 - iPhone, iPad, macOS, watchOS, and visionOS interfaces appropriate to each
   screen size.
@@ -111,7 +148,9 @@ points wherever possible.
 ### Keep exporters off the main actor
 
 Signal ingestion, redaction, accounting, and storage must remain concurrency-safe
-and must not require the main actor. Only presentation belongs on the UI actor.
+and must not require the main actor. Export callbacks should copy or enqueue
+bounded work promptly rather than block application work. Only presentation
+belongs on the UI actor.
 
 ### Bound resource use
 
@@ -120,16 +159,21 @@ On-device telemetry must not grow without limit. The store should enforce:
 - Maximum signal count.
 - Maximum estimated bytes.
 - Maximum signal age.
-- Bounded attribute values.
+- Maximum attribute value size.
 - Deterministic eviction.
 
-Active or malformed spans must not be retained indefinitely.
+Malformed completed spans should remain inspectable when safe, including as
+orphans, but must obey the same limits as valid spans.
 
 ### Redact before storage
 
 Sensitive attributes should be rejected or transformed before entering the local
 store. Hiding values only in the UI still leaves private data resident in memory
 or diagnostic exports.
+
+Version 0.1 should truncate all attribute values to a configurable maximum and
+provide a redaction hook that runs before snapshots enter the store. Applications
+remain responsible for choosing which domain-specific attributes are safe.
 
 ### Make the viewer optional
 
@@ -150,6 +194,10 @@ OpenTelemetry signal
 Using the inspector must not change application behavior or prevent normal
 export to Grafana, Jaeger, Tempo, or another OTel-compatible system.
 
+The inspector should compose through standard OpenTelemetry processor and
+exporter mechanisms. Local failures must be surfaced for diagnostics but must
+not turn a successful remote export, flush, or shutdown into a failure.
+
 ## Example use case: cross-device synchronization
 
 A synchronization engine could expose short local phases as spans:
@@ -166,9 +214,9 @@ Metrics could summarize queue depth, acknowledgement latency, retry counts, and
 recovery frequency. Structured logs could record bounded state transitions such
 as peer authentication, gap detection, or full-resync requests.
 
-The on-device inspector would answer:
+For completed operations, the on-device inspector would answer:
 
-> Where is this operation currently waiting, and what happened on this device?
+> Where did this operation spend time, and what happened on this device?
 
 Remote aggregate telemetry would answer:
 
@@ -188,6 +236,9 @@ content, application domain identifiers, or other private payloads.
 ## Status
 
 This repository currently captures the project direction. The next milestone is
-a small technical spike against OpenTelemetry Swift's span exporter interfaces,
-followed by the bounded trace store and first SwiftUI trace tree.
-
+a small technical spike against OpenTelemetry Swift's span exporter interfaces.
+It should confirm dependency and platform versions, exporter composition, flush
+and shutdown behavior, and the concurrency model before public APIs are added.
+Package scaffolding should include a license and CI for every declared platform.
+The spike is followed by the bounded completed-span store and first SwiftUI trace
+tree.
