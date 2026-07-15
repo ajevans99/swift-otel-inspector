@@ -15,9 +15,29 @@ public struct TraceInspectorView: View {
                 .navigationTitle("Traces")
                 .searchable(text: $model.searchText, prompt: "Name, service, or trace ID")
                 .toolbar {
-                    Toggle(isOn: $model.errorsOnly) {
-                        Label("Errors only", systemImage: "exclamationmark.triangle")
+                    Menu {
+                        Picker("Status", selection: $model.statusFilter) {
+                            ForEach(TraceStatusFilter.allCases) {
+                                Text($0.rawValue).tag($0)
+                            }
+                        }
+                        Picker("Service", selection: $model.selectedService) {
+                            Text("All services").tag(String?.none)
+                            ForEach(model.availableServices, id: \.self) {
+                                Text($0).tag(Optional($0))
+                            }
+                        }
+                        Picker("Sort", selection: $model.sortOrder) {
+                            ForEach(TraceSortOrder.allCases) {
+                                Text($0.rawValue).tag($0)
+                            }
+                        }
+                    } label: {
+                        Label("Filters", systemImage: "line.3.horizontal.decrease.circle")
                     }
+                }
+                .safeAreaInset(edge: .bottom) {
+                    attributeFilters
                 }
         } detail: {
             if let trace = selectedTrace {
@@ -26,6 +46,16 @@ public struct TraceInspectorView: View {
                 InspectorPlaceholderView()
             }
         }
+    }
+
+    private var attributeFilters: some View {
+        VStack(spacing: 6) {
+            TextField("Attribute key", text: $model.attributeKey)
+            TextField("Attribute value", text: $model.attributeValue)
+        }
+        .textFieldStyle(.roundedBorder)
+        .padding(8)
+        .background(.bar)
     }
 
     private var selectedTrace: TraceSnapshot? {
@@ -83,21 +113,33 @@ private struct TraceRow: View {
 }
 
 private struct TraceDetailView: View {
+    private enum Presentation: String, CaseIterable, Identifiable {
+        case tree = "Tree"
+        case waterfall = "Waterfall"
+
+        var id: Self { self }
+    }
+
     let trace: TraceSnapshot
     @State private var selectedSpanID: SpanID?
+    @State private var presentation: Presentation = .tree
 
     var body: some View {
         VStack(spacing: 0) {
-            List {
-                Section("Trace tree") {
-                    OutlineGroup(trace.roots, children: \.outlineChildren) { node in
-                        Button {
-                            selectedSpanID = node.span.spanID
-                        } label: {
-                            SpanTreeRow(node: node)
-                        }
-                        .buttonStyle(.plain)
-                    }
+            Picker("Presentation", selection: $presentation) {
+                ForEach(Presentation.allCases) {
+                    Text($0.rawValue).tag($0)
+                }
+            }
+            .pickerStyle(.segmented)
+            .padding()
+
+            Group {
+                switch presentation {
+                case .tree:
+                    traceTree
+                case .waterfall:
+                    SpanWaterfallView(trace: trace, selectedSpanID: $selectedSpanID)
                 }
             }
             .frame(minHeight: 180)
@@ -120,6 +162,73 @@ private struct TraceDetailView: View {
 
     private var selectedSpan: SpanSnapshot? {
         trace.spans.first { $0.spanID == selectedSpanID }
+    }
+
+    private var traceTree: some View {
+        List {
+            Section("Trace tree") {
+                OutlineGroup(trace.roots, children: \.outlineChildren) { node in
+                    Button {
+                        selectedSpanID = node.span.spanID
+                    } label: {
+                        SpanTreeRow(node: node)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+    }
+}
+
+private struct SpanWaterfallView: View {
+    let trace: TraceSnapshot
+    @Binding var selectedSpanID: SpanID?
+
+    private let labelWidth: CGFloat = 150
+    private let rowHeight: CGFloat = 30
+
+    var body: some View {
+        let items = SpanWaterfallLayout.items(for: trace)
+        ScrollView([.horizontal, .vertical]) {
+            VStack(alignment: .leading, spacing: 4) {
+                ForEach(items) { item in
+                    HStack(spacing: 8) {
+                        Text(item.span.name)
+                            .font(.caption)
+                            .lineLimit(1)
+                            .padding(.leading, CGFloat(item.depth) * 10)
+                            .frame(width: labelWidth, alignment: .leading)
+                        GeometryReader { geometry in
+                            let availableWidth = max(1, geometry.size.width)
+                            Button {
+                                selectedSpanID = item.span.spanID
+                            } label: {
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(item.span.status.isError ? Color.red : Color.accentColor)
+                                    .overlay(alignment: .leading) {
+                                        if item.span.spanID == selectedSpanID {
+                                            RoundedRectangle(cornerRadius: 4)
+                                                .stroke(.primary, lineWidth: 2)
+                                        }
+                                    }
+                                    .frame(
+                                        width: max(3, availableWidth * item.widthFraction),
+                                        height: 18
+                                    )
+                                    .offset(x: availableWidth * item.offsetFraction)
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel(
+                                "\(item.span.name), \(InspectorFormatting.duration(item.span.durationNanoseconds))"
+                            )
+                        }
+                        .frame(width: 420, height: rowHeight)
+                    }
+                    .frame(height: rowHeight)
+                }
+            }
+            .padding()
+        }
     }
 }
 
