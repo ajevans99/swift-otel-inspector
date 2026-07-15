@@ -58,6 +58,7 @@ public actor TraceStore {
     private var spansByKey: [SpanKey: SpanSnapshot] = [:]
     private var continuations: [UUID: AsyncStream<[TraceSnapshot]>.Continuation] = [:]
     private var expirationTask: Task<Void, Never>?
+    private var expirationGeneration: UInt64 = 0
 
     public init(
         configuration: TraceStoreConfiguration = TraceStoreConfiguration(),
@@ -81,6 +82,7 @@ public actor TraceStore {
     }
 
     public func removeAll() {
+        expirationGeneration &+= 1
         expirationTask?.cancel()
         expirationTask = nil
         spansByKey.removeAll(keepingCapacity: true)
@@ -129,7 +131,10 @@ public actor TraceStore {
         continuations.removeValue(forKey: id)
     }
 
-    private func expireAndReschedule() {
+    private func expireAndReschedule(generation: UInt64) {
+        guard generation == expirationGeneration else {
+            return
+        }
         expirationTask = nil
         if evictExpired() {
             publish()
@@ -158,6 +163,8 @@ public actor TraceStore {
     }
 
     private func scheduleExpiration() {
+        expirationGeneration &+= 1
+        let generation = expirationGeneration
         expirationTask?.cancel()
         expirationTask = nil
         guard let oldestEnd = spansByKey.values.map(\.endTime.nanosecondsSinceEpoch).min() else {
@@ -178,7 +185,7 @@ public actor TraceStore {
             guard !Task.isCancelled else {
                 return
             }
-            await self?.expireAndReschedule()
+            await self?.expireAndReschedule(generation: generation)
         }
     }
 

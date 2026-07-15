@@ -83,9 +83,9 @@ public final class TraceInspectorModel: ObservableObject {
         case .errors:
             trace.containsError
         case .successful:
-            !trace.containsError && trace.spans.contains { $0.status == .ok }
+            !trace.spans.isEmpty && trace.spans.allSatisfy { $0.status == .ok }
         case .unset:
-            trace.spans.contains { $0.status == .unset }
+            !trace.containsError && !trace.spans.allSatisfy { $0.status == .ok }
         }
     }
 
@@ -96,16 +96,16 @@ public final class TraceInspectorModel: ObservableObject {
             return true
         }
         return trace.spans.contains { span in
-            let attributes = span.attributes.merging(span.resource.attributes) {
-                current, _ in current
+            func matches(_ attributes: [String: TelemetryAttributeValue]) -> Bool {
+                attributes.contains { attribute in
+                    let keyMatches = key.isEmpty
+                        || attribute.key.localizedCaseInsensitiveContains(key)
+                    let valueMatches = value.isEmpty
+                        || attribute.value.displayValue.localizedCaseInsensitiveContains(value)
+                    return keyMatches && valueMatches
+                }
             }
-            return attributes.contains { attribute in
-                let keyMatches = key.isEmpty
-                    || attribute.key.localizedCaseInsensitiveContains(key)
-                let valueMatches = value.isEmpty
-                    || attribute.value.displayValue.localizedCaseInsensitiveContains(value)
-                return keyMatches && valueMatches
-            }
+            return matches(span.attributes) || matches(span.resource.attributes)
         }
     }
 

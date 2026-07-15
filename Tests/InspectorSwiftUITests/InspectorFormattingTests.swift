@@ -87,6 +87,30 @@ func waterfallLayoutPreservesTreeDepthAndRelativeTiming() throws {
     #expect(childItem.widthFraction == 0.5)
 }
 
+@Test @MainActor
+func statusFiltersUseExclusiveAggregateTraceStatus() async {
+    let store = TraceStore(clock: { TelemetryTimestamp(nanosecondsSinceEpoch: 100) })
+    let model = TraceInspectorModel(store: store)
+    let ok = testSpan(trace: "mixed", span: "01", start: 1, end: 2, region: "east")
+    let unset = SpanSnapshot(
+        traceID: ok.traceID,
+        spanID: SpanID(rawValue: "02"),
+        name: "unset",
+        startTime: TelemetryTimestamp(nanosecondsSinceEpoch: 2),
+        endTime: TelemetryTimestamp(nanosecondsSinceEpoch: 3)
+    )
+    await store.insert([ok, unset])
+    for _ in 0 ..< 20 where model.traces.isEmpty {
+        try? await Task.sleep(for: .milliseconds(5))
+    }
+
+    model.statusFilter = .successful
+    #expect(model.filteredTraces.isEmpty)
+    model.statusFilter = .unset
+    #expect(model.filteredTraces.count == 1)
+    model.stopObserving()
+}
+
 private func testSpan(
     trace: String,
     span: String,
