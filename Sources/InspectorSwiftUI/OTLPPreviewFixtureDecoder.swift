@@ -19,6 +19,27 @@ enum OTLPPreviewFixtureDecoder {
                 return scopeSpans.spans.map {
                     snapshot($0, resource: resource, scope: scope)
                 }
+
+            }
+        }
+    }
+
+    static func decodeMetrics(_ data: Data) throws -> [MetricSnapshot] {
+        let request = try JSONDecoder().decode(ExportMetricsRequest.self, from: data)
+        return request.resourceMetrics.flatMap { resourceMetrics in
+            let resource = ResourceSnapshot(
+                attributes: attributes(resourceMetrics.resource.attributes),
+                schemaURL: resourceMetrics.schemaUrl
+            )
+            return resourceMetrics.scopeMetrics.flatMap { scopeMetrics in
+                let scope = InstrumentationScopeSnapshot(
+                    name: scopeMetrics.scope.name,
+                    version: scopeMetrics.scope.version,
+                    schemaURL: scopeMetrics.schemaUrl
+                )
+                return scopeMetrics.metrics.compactMap {
+                    metricSnapshot($0, resource: resource, scope: scope)
+                }
             }
         }
     }
@@ -64,12 +85,211 @@ enum OTLPPreviewFixtureDecoder {
         )
     }
 
+    private static func metricSnapshot(
+        _ metric: OTLPMetric,
+        resource: ResourceSnapshot,
+        scope: InstrumentationScopeSnapshot
+    ) -> MetricSnapshot? {
+        if let gauge = metric.gauge {
+            return numberMetric(
+                metric,
+                points: gauge.dataPoints,
+                kind: .gauge,
+                temporality: .cumulative,
+                resource: resource,
+                scope: scope
+            )
+        }
+        if let sum = metric.sum {
+            return numberMetric(
+                metric,
+                points: sum.dataPoints,
+                kind: .sum(monotonic: sum.isMonotonic),
+                temporality: temporality(sum.aggregationTemporality),
+                resource: resource,
+                scope: scope
+            )
+        }
+        if let histogram = metric.histogram {
+            let series = histogram.dataPoints.map {
+                MetricSeriesSnapshot(
+                    attributes: attributes($0.attributes ?? []),
+                    points: [
+                        MetricPointSnapshot(
+                            startTime: timestamp($0.startTimeUnixNano ?? "0"),
+                            endTime: timestamp($0.timeUnixNano),
+                            value: .histogram(
+                                MetricHistogramSnapshot(
+                                    count: UInt64($0.count) ?? 0,
+                                    sum: $0.sum ?? 0,
+                                    minimum: $0.min,
+                                    maximum: $0.max,
+                                    boundaries: $0.explicitBounds,
+                                    bucketCounts: $0.bucketCounts.map { UInt64($0) ?? 0 }
+                                )
+                            ),
+                            exemplars: ($0.exemplars ?? []).compactMap(exemplar)
+                        ),
+                    ]
+                )
+            }
+            return MetricSnapshot(
+                name: metric.name,
+                description: metric.description ?? "",
+                unit: metric.unit ?? "",
+                kind: .histogram,
+                temporality: temporality(histogram.aggregationTemporality),
+                resource: resource,
+                instrumentationScope: scope,
+                series: series
+            )
+        }
+        return nil
+    }
+
+    private static func numberMetric(
+        _ metric: OTLPMetric,
+        points: [OTLPNumberDataPoint],
+        kind: MetricKind,
+        temporality: MetricAggregationTemporality,
+        resource: ResourceSnapshot,
+        scope: InstrumentationScopeSnapshot
+    ) -> MetricSnapshot {
+        MetricSnapshot(
+            name: metric.name,
+            description: metric.description ?? "",
+            unit: metric.unit ?? "",
+            kind: kind,
+            temporality: temporality,
+            resource: resource,
+            instrumentationScope: scope,
+            series: points.compactMap { point in
+                guard let value = point.metricNumber else {
+                    return nil
+                }
+                return MetricSeriesSnapshot(
+                    attributes: attributes(point.attributes ?? []),
+                    points: [
+                        MetricPointSnapshot(
+                            startTime: timestamp(point.startTimeUnixNano ?? "0"),
+                            endTime: timestamp(point.timeUnixNano),
+                            value: .number(value),
+                            exemplars: (point.exemplars ?? []).compactMap(exemplar)
+                        ),
+                    ]
+                )
+            }
+        )
+    }
+
+    private static func exemplar(_ exemplar: OTLPExemplar) -> MetricExemplarSnapshot? {
+        guard let value = exemplar.metricNumber else {
+            return nil
+        }
+        return MetricExemplarSnapshot(
+            timestamp: timestamp(exemplar.timeUnixNano),
+            value: value,
+            filteredAttributes: attributes(exemplar.filteredAttributes ?? []),
+            traceID: exemplar.traceId.map(TraceID.init),
+            spanID: exemplar.spanId.map(SpanID.init)
+        )
+    }
+
+    private static func temporality(_ value: Int) -> MetricAggregationTemporality {
+        value == 1 ? .delta : .cumulative
+    }
+
     private static func attributes(
         _ keyValues: [KeyValue]
     ) -> [String: TelemetryAttributeValue] {
         Dictionary(uniqueKeysWithValues: keyValues.compactMap { entry in
             entry.value.attributeValue.map { (entry.key, $0) }
         })
+    }
+
+    private struct ExportMetricsRequest: Decodable {
+        let resourceMetrics: [OTLPResourceMetrics]
+    }
+
+    private struct OTLPResourceMetrics: Decodable {
+        let resource: OTLPResource
+        let scopeMetrics: [OTLPScopeMetrics]
+        let schemaUrl: String?
+    }
+
+    private struct OTLPScopeMetrics: Decodable {
+        let scope: OTLPScope
+        let metrics: [OTLPMetric]
+        let schemaUrl: String?
+    }
+
+    private struct OTLPMetric: Decodable {
+        let name: String
+        let description: String?
+        let unit: String?
+        let gauge: OTLPNumberData?
+        let sum: OTLPSumData?
+        let histogram: OTLPHistogramData?
+    }
+
+    private struct OTLPNumberData: Decodable {
+        let dataPoints: [OTLPNumberDataPoint]
+    }
+
+    private struct OTLPSumData: Decodable {
+        let dataPoints: [OTLPNumberDataPoint]
+        let aggregationTemporality: Int
+        let isMonotonic: Bool
+    }
+
+    private struct OTLPNumberDataPoint: Decodable {
+        let startTimeUnixNano: String?
+        let timeUnixNano: String
+        let asInt: String?
+        let asDouble: Double?
+        let attributes: [KeyValue]?
+        let exemplars: [OTLPExemplar]?
+
+        var metricNumber: MetricNumber? {
+            if let asInt, let value = Int64(asInt) {
+                return .integer(value)
+            }
+            return asDouble.map(MetricNumber.double)
+        }
+    }
+
+    private struct OTLPHistogramData: Decodable {
+        let aggregationTemporality: Int
+        let dataPoints: [OTLPHistogramDataPoint]
+    }
+
+    private struct OTLPHistogramDataPoint: Decodable {
+        let startTimeUnixNano: String?
+        let timeUnixNano: String
+        let count: String
+        let sum: Double?
+        let min: Double?
+        let max: Double?
+        let explicitBounds: [Double]
+        let bucketCounts: [String]
+        let attributes: [KeyValue]?
+        let exemplars: [OTLPExemplar]?
+    }
+
+    private struct OTLPExemplar: Decodable {
+        let timeUnixNano: String
+        let asInt: String?
+        let asDouble: Double?
+        let filteredAttributes: [KeyValue]?
+        let traceId: String?
+        let spanId: String?
+
+        var metricNumber: MetricNumber? {
+            if let asInt, let value = Int64(asInt) {
+                return .integer(value)
+            }
+            return asDouble.map(MetricNumber.double)
+        }
     }
 
     private static func timestamp(_ value: String) -> TelemetryTimestamp {
