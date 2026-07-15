@@ -66,6 +66,25 @@ The package should consume standard OpenTelemetry Swift protocols. Integrations
 with libraries such as `swift-composable-otel` should remain small, optional
 adapters rather than requirements.
 
+## Development fixtures
+
+[`fixtures/otlp/sync-trace.json`](fixtures/otlp/sync-trace.json) is a small
+OTLP/HTTP JSON trace for parser development, UI previews, and deterministic
+tests. It models a failed synchronization request across an iOS application and
+an API service, including cross-resource parentage, semantic convention
+attributes, mixed attribute value types, a retry, exception events, a span link,
+and error status propagation.
+
+The fixture is an OTLP export request body and can be submitted directly to an
+OTLP/HTTP traces endpoint:
+
+```sh
+curl \
+  -H 'Content-Type: application/json' \
+  --data-binary @fixtures/otlp/sync-trace.json \
+  http://localhost:4318/v1/traces
+```
+
 ## Version 0.1: traces
 
 The first useful release should stay deliberately narrow:
@@ -190,4 +209,3 @@ content, application domain identifiers, or other private payloads.
 This repository currently captures the project direction. The next milestone is
 a small technical spike against OpenTelemetry Swift's span exporter interfaces,
 followed by the bounded trace store and first SwiftUI trace tree.
-
