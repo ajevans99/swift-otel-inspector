@@ -12,6 +12,7 @@ let package = Package(
         .library(name: "InspectorCore", targets: ["InspectorCore"]),
         .library(name: "InspectorOpenTelemetry", targets: ["InspectorOpenTelemetry"]),
         .library(name: "InspectorSwiftUI", targets: ["InspectorSwiftUI"]),
+        .executable(name: "InspectorExample", targets: ["InspectorExample"]),
     ],
     dependencies: [
         .package(
@@ -20,18 +21,35 @@ let package = Package(
         ),
     ],
     targets: [
-        .target(name: "InspectorCore"),
+        .target(
+            name: "InspectorCore",
+            resources: [.copy("InspectorCore.docc")]
+        ),
         .target(
             name: "InspectorOpenTelemetry",
             dependencies: [
                 "InspectorCore",
                 .product(name: "OpenTelemetryApi", package: "opentelemetry-swift-core"),
                 .product(name: "OpenTelemetrySdk", package: "opentelemetry-swift-core"),
-            ]
+            ],
+            resources: [.copy("InspectorOpenTelemetry.docc")]
         ),
         .target(
             name: "InspectorSwiftUI",
-            dependencies: ["InspectorCore"]
+            dependencies: ["InspectorCore"],
+            resources: [.copy("InspectorSwiftUI.docc")]
+        ),
+        .executableTarget(
+            name: "InspectorExample",
+            dependencies: [
+                "InspectorCore",
+                "InspectorOpenTelemetry",
+                "InspectorSwiftUI",
+                .product(name: "OpenTelemetryApi", package: "opentelemetry-swift-core"),
+                .product(name: "OpenTelemetrySdk", package: "opentelemetry-swift-core"),
+                .product(name: "StdoutExporter", package: "opentelemetry-swift-core"),
+            ],
+            path: "Examples/InspectorExample"
         ),
         .testTarget(
             name: "InspectorCoreTests",

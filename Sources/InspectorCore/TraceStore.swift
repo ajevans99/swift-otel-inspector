@@ -73,7 +73,7 @@ public actor TraceStore {
             let sanitized = sanitize(span)
             spansByKey[SpanKey(traceID: sanitized.traceID, spanID: sanitized.spanID)] = sanitized
         }
-        evictExpired()
+        _ = evictExpired()
         evictToLimits()
         publish()
     }
@@ -84,11 +84,17 @@ public actor TraceStore {
     }
 
     public func traces() -> [TraceSnapshot] {
-        makeTraces()
+        if evictExpired() {
+            publish()
+        }
+        return makeTraces()
     }
 
     public func statistics() -> TraceStoreStatistics {
-        TraceStoreStatistics(
+        if evictExpired() {
+            publish()
+        }
+        return TraceStoreStatistics(
             spanCount: spansByKey.count,
             traceCount: Set(spansByKey.values.map(\.traceID)).count,
             estimatedBytes: estimatedByteCount
@@ -96,8 +102,11 @@ public actor TraceStore {
     }
 
     public func changes() -> AsyncStream<[TraceSnapshot]> {
+        if evictExpired() {
+            publish()
+        }
         let id = UUID()
-        return AsyncStream { continuation in
+        return AsyncStream(bufferingPolicy: .bufferingNewest(1)) { continuation in
             continuations[id] = continuation
             continuation.yield(makeTraces())
             continuation.onTermination = { [weak self] _ in
@@ -136,11 +145,14 @@ public actor TraceStore {
             }
     }
 
-    private func evictExpired() {
+    @discardableResult
+    private func evictExpired() -> Bool {
+        let previousCount = spansByKey.count
         let now = clock().nanosecondsSinceEpoch
         let age = configuration.maximumAge.nanosecondsClamped
         let cutoff = now > age ? now - age : 0
         spansByKey = spansByKey.filter { $0.value.endTime.nanosecondsSinceEpoch >= cutoff }
+        return spansByKey.count != previousCount
     }
 
     private func evictToLimits() {

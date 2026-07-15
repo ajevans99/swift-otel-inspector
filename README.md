@@ -38,7 +38,7 @@ The package is intended for:
 
 It is a developer diagnostic tool, not a production telemetry backend.
 
-## Proposed package structure
+## Package structure
 
 ```text
 SwiftOTelInspector
@@ -71,6 +71,90 @@ OpenTelemetry SDK types. `InspectorOpenTelemetry` is responsible for converting
 completed SDK spans into those snapshots. This keeps storage and presentation
 stable when the upstream SDK changes.
 
+## Requirements
+
+- Swift 6.0 or newer.
+- iOS 17 or newer.
+- macOS 13 or newer.
+- OpenTelemetry Swift Core 2.5.1.
+
+## Installation
+
+Add this repository as a Swift Package dependency, then select only the products
+the application needs:
+
+- `InspectorCore` provides immutable telemetry models and the bounded store.
+- `InspectorOpenTelemetry` converts completed OpenTelemetry SDK spans.
+- `InspectorSwiftUI` provides the trace browser.
+
+Applications using the exporter also need the `OpenTelemetrySdk` product from
+[`opentelemetry-swift-core`](https://github.com/open-telemetry/opentelemetry-swift-core).
+
+## Quick start
+
+```swift
+import InspectorCore
+import InspectorOpenTelemetry
+import InspectorSwiftUI
+import OpenTelemetrySdk
+import SwiftUI
+
+let store = TraceStore(
+    configuration: TraceStoreConfiguration(
+        maximumSpanCount: 1_000,
+        maximumEstimatedBytes: 5_000_000,
+        maximumAge: .seconds(3_600),
+        maximumAttributeValueBytes: 4_096
+    ),
+    redactor: { key, value in
+        key == "user.email" ? nil : value
+    }
+)
+
+let inspectorExporter = InspectorSpanExporter(store: store)
+let processor = BatchSpanProcessor(spanExporter: inspectorExporter)
+let tracerProvider = TracerProviderSdk(spanProcessors: [processor])
+```
+
+Embed the viewer wherever developer diagnostics belong:
+
+```swift
+TraceInspectorView(store: store)
+```
+
+Run the included macOS example with:
+
+```sh
+swift run InspectorExample
+```
+
+The example sends completed spans to both the local inspector and the
+OpenTelemetry stdout exporter.
+
+### Compose with remote export
+
+Use OpenTelemetry Swift's standard `MultiSpanExporter` when the application
+should inspect and remotely export the same sampled spans:
+
+```swift
+let exporter = MultiSpanExporter(
+    spanExporters: [inspectorExporter, remoteExporter]
+)
+let processor = BatchSpanProcessor(spanExporter: exporter)
+```
+
+Every child exporter is invoked. The combined result is a failure if any child
+fails. Applications that require independent failure and lifecycle handling can
+register separate span processors instead.
+
+### Privacy and limits
+
+Redaction runs before snapshots enter the store. Returning `nil` from the
+redactor removes an attribute. Remaining string and byte values are truncated
+to `maximumAttributeValueBytes`; count, estimated-byte, and age limits then
+enforce deterministic eviction. Applications remain responsible for deciding
+which domain-specific attributes are safe to retain.
+
 ## Development fixtures
 
 [`fixtures/otlp/sync-trace.json`](fixtures/otlp/sync-trace.json) is a small
@@ -93,7 +177,7 @@ curl \
 
 ## Version 0.1: traces
 
-The first useful release should stay deliberately narrow and inspect completed
+The first release stays deliberately narrow and inspects completed
 spans only. Live or active-span inspection requires lifecycle observation beyond
 the exporter contract and is deferred until after the completed-span experience
 is reliable.
@@ -115,11 +199,8 @@ is reliable.
 This is enough to make the package useful while teaching the most important
 OpenTelemetry concepts.
 
-Before implementation begins, the technical spike should establish the minimum
-Swift, Xcode, and platform versions supported by the selected OpenTelemetry Swift
-release. The initial package should declare only platforms exercised in CI;
-additional Apple platforms and Linux support should be added when they have
-build and test coverage.
+The package declares only platforms exercised in CI. Additional Apple platforms
+and Linux support can be added when they have build and test coverage.
 
 ## Future roadmap
 
@@ -194,9 +275,10 @@ OpenTelemetry signal
 Using the inspector must not change application behavior or prevent normal
 export to Grafana, Jaeger, Tempo, or another OTel-compatible system.
 
-The inspector should compose through standard OpenTelemetry processor and
-exporter mechanisms. Local failures must be surfaced for diagnostics but must
-not turn a successful remote export, flush, or shutdown into a failure.
+The inspector composes through standard OpenTelemetry processor and exporter
+mechanisms. `MultiSpanExporter` invokes every child and merges their results, so
+a failure from any local or remote child makes the combined result a failure.
+Separate processors provide independent failure and lifecycle handling.
 
 ## Example use case: cross-device synchronization
 
@@ -235,10 +317,7 @@ content, application domain identifiers, or other private payloads.
 
 ## Status
 
-This repository currently captures the project direction. The next milestone is
-a small technical spike against OpenTelemetry Swift's span exporter interfaces.
-It should confirm dependency and platform versions, exporter composition, flush
-and shutdown behavior, and the concurrency model before public APIs are added.
-Package scaffolding should include a license and CI for every declared platform.
-The spike is followed by the bounded completed-span store and first SwiftUI trace
-tree.
+Version 0.1 development is underway. The package includes immutable trace
+snapshots, a bounded actor-owned store, an OpenTelemetry Swift span exporter, a
+fixture-backed SwiftUI trace browser, tests, and an example application. Logs,
+metrics, persistence, and active-span inspection remain future work.

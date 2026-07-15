@@ -1,3 +1,4 @@
+import Foundation
 import InspectorCore
 import Testing
 
@@ -87,6 +88,21 @@ func storeRemovesExpiredSpans() async {
 }
 
 @Test
+func readsRemoveSpansThatExpiredAfterIngestionStopped() async {
+    let clock = MutableTestClock(now: 100)
+    let store = TraceStore(
+        configuration: TraceStoreConfiguration(maximumAge: .nanoseconds(10)),
+        clock: { clock.timestamp }
+    )
+    await store.insert([makeStoreSpan(trace: "01", span: "01", end: 95)])
+    #expect(await store.statistics().spanCount == 1)
+
+    clock.now = 106
+
+    #expect(await store.traces().isEmpty)
+}
+
+@Test
 func changeStreamPublishesInitialAndInsertedSnapshots() async throws {
     let store = TraceStore(
         configuration: TraceStoreConfiguration(maximumAge: .seconds(100)),
@@ -98,6 +114,37 @@ func changeStreamPublishesInitialAndInsertedSnapshots() async throws {
     #expect(try #require(await iterator.next()).isEmpty)
     await store.insert([makeStoreSpan(trace: "01", span: "01", end: 50)])
     #expect(try #require(await iterator.next()).first?.spans.count == 1)
+}
+
+@Test
+func concurrentInsertionRemainsWithinLimits() async {
+    let maximumSpanCount = 25
+    let store = TraceStore(
+        configuration: TraceStoreConfiguration(
+            maximumSpanCount: maximumSpanCount,
+            maximumEstimatedBytes: 100_000,
+            maximumAge: .seconds(100)
+        ),
+        clock: { TelemetryTimestamp(nanosecondsSinceEpoch: 1_000) }
+    )
+
+    await withTaskGroup(of: Void.self) { group in
+        for index in 0 ..< 100 {
+            group.addTask {
+                await store.insert([
+                    makeStoreSpan(
+                        trace: String(format: "%02x", index / 10),
+                        span: String(format: "%016x", index),
+                        end: UInt64(index + 1)
+                    ),
+                ])
+            }
+        }
+    }
+
+    let statistics = await store.statistics()
+    #expect(statistics.spanCount == maximumSpanCount)
+    #expect(statistics.estimatedBytes <= 100_000)
 }
 
 private func makeStoreSpan(
@@ -115,4 +162,22 @@ private func makeStoreSpan(
         endTime: TelemetryTimestamp(nanosecondsSinceEpoch: end),
         attributes: attributes
     )
+}
+
+private final class MutableTestClock: @unchecked Sendable {
+    private let lock = NSLock()
+    private var storedNow: UInt64
+
+    init(now: UInt64) {
+        storedNow = now
+    }
+
+    var now: UInt64 {
+        get { lock.withLock { storedNow } }
+        set { lock.withLock { storedNow = newValue } }
+    }
+
+    var timestamp: TelemetryTimestamp {
+        TelemetryTimestamp(nanosecondsSinceEpoch: now)
+    }
 }
