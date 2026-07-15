@@ -88,9 +88,12 @@ build, and the external consumer check pass.
 Add this repository as a Swift Package dependency, then select only the products
 the application needs:
 
-- `InspectorCore` provides immutable telemetry models and bounded trace and log stores.
-- `InspectorOpenTelemetry` converts completed OpenTelemetry SDK spans and log records.
-- `InspectorSwiftUI` provides trace and structured log browsers.
+- `InspectorCore` provides immutable telemetry models and bounded trace, log,
+  and metric stores.
+- `InspectorOpenTelemetry` converts completed OpenTelemetry SDK spans, log
+  records, and metric data.
+- `InspectorSwiftUI` provides trace, structured log, and Swift Charts metric
+  browsers.
 
 Applications using the exporter also need the `OpenTelemetrySdk` product from
 [`opentelemetry-swift-core`](https://github.com/open-telemetry/opentelemetry-swift-core).
@@ -125,6 +128,19 @@ let logExporter = InspectorLogExporter(store: logStore)
 let loggerProvider = LoggerProviderSdk(
     logRecordProcessors: [SimpleLogRecordProcessor(logRecordExporter: logExporter)]
 )
+
+let metricStore = MetricStore()
+let metricExporter = InspectorMetricExporter(store: metricStore)
+let metricReader = PeriodicMetricReaderBuilder(exporter: metricExporter)
+    .setInterval(timeInterval: 5)
+    .build()
+let meterProvider = MeterProviderSdk.builder()
+    .registerMetricReader(reader: metricReader)
+    .registerView(
+        selector: InstrumentSelector.builder().build(),
+        view: View.builder().build()
+    )
+    .build()
 ```
 
 Embed the viewer wherever developer diagnostics belong:
@@ -132,6 +148,7 @@ Embed the viewer wherever developer diagnostics belong:
 ```swift
 TraceInspectorView(store: store, logStore: logStore)
 LogInspectorView(store: logStore)
+MetricInspectorView(store: metricStore)
 ```
 
 Open the standalone example package in Xcode:
@@ -141,9 +158,9 @@ open Examples/InspectorExample/Package.swift
 ```
 
 Select the `InspectorExampleApp` scheme and run it on an iOS 17 simulator or
-macOS. The example is a separate package consumer that emits correlated spans
-and logs, sends spans to both local and stdout exporters, and presents dedicated
-trace and log tabs.
+macOS. The example is a separate package consumer that emits correlated spans,
+logs, and continuously changing metrics. It presents dedicated trace, log, and
+metric tabs, including live counter-rate, gauge, and histogram charts.
 
 ### Compose with remote export
 
@@ -161,6 +178,10 @@ Every child exporter is invoked. The combined result is a failure if any child
 fails. Applications that require independent failure and lifecycle handling can
 register separate span processors instead.
 
+For metrics, register separate metric readers when the same instruments should
+feed the local inspector and a remote exporter. Each reader owns its exporter,
+collection interval, temporality, flush, and shutdown lifecycle.
+
 ### Privacy and limits
 
 Redaction runs before snapshots enter the store. Returning `nil` from the
@@ -168,6 +189,11 @@ redactor removes an attribute. Remaining string and byte values are truncated
 to `maximumAttributeValueBytes`; count, estimated-byte, and age limits then
 enforce deterministic eviction. Applications remain responsible for deciding
 which domain-specific attributes are safe to retain.
+
+Metric storage additionally limits metrics, total series, series per metric,
+and points per series. Every unique resource and point-attribute combination is
+a distinct series, so avoid high-cardinality values such as user IDs, request
+IDs, and raw URLs even when generous store limits are configured.
 
 ## Development fixtures
 
@@ -184,6 +210,11 @@ resource and log attributes, observed timestamps, an exception event, a
 structured body, an uncorrelated application log, and trace/span correlation
 across both services.
 
+[`fixtures/otlp/sync-metrics.json`](fixtures/otlp/sync-metrics.json) contains
+matching cumulative counters, gauges, and explicit-bucket histograms from the
+iOS app and API service. It includes repeated collection windows, multiple
+series, resource and point attributes, and trace-correlated exemplars.
+
 The fixtures are OTLP export request bodies and can be submitted directly to a
 generic OTLP/HTTP receiver, such as a local OpenTelemetry Collector. The
 inspector does not provide an OTLP receiver:
@@ -198,6 +229,11 @@ curl \
   -H 'Content-Type: application/json' \
   --data-binary @fixtures/otlp/sync-logs.json \
   http://localhost:4318/v1/logs
+
+curl \
+  -H 'Content-Type: application/json' \
+  --data-binary @fixtures/otlp/sync-metrics.json \
+  http://localhost:4318/v1/metrics
 ```
 
 ## Version 0.1: traces
@@ -230,9 +266,8 @@ and Linux support can be added when they have build and test coverage.
 
 ## Future roadmap
 
-- Counters, gauges, and histogram summaries.
 - Metric events in the unified trace and log timeline.
-- Small Swift Charts visualizations for metric history.
+- Exemplar navigation from metric charts into retained traces.
 - JSON and OTLP diagnostic bundle export.
 - Attribute allowlists and configurable redaction.
 - Optional encrypted local persistence.
@@ -342,7 +377,8 @@ content, application domain identifiers, or other private payloads.
 ## Status
 
 Version 0.1 provides completed trace inspection. Current development adds
-immutable correlated log snapshots, bounded log storage, an OpenTelemetry Swift
-log exporter, a searchable severity-aware log browser, and a unified trace
-timeline for spans, span events, and logs. Metrics, persistence, and active-span
-inspection remain future work.
+correlated logs and metrics with bounded stores, OpenTelemetry Swift exporters,
+a unified trace timeline, a searchable severity-aware log browser, and a Swift
+Charts metric browser for gauges, counter rates, sums, summaries, and explicit
+or exponential histograms. Persistence and active-span inspection remain future
+work.

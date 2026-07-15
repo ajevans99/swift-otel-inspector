@@ -5,9 +5,9 @@ Store and query bounded, immutable snapshots of completed telemetry.
 ## Overview
 
 `InspectorCore` has no dependency on OpenTelemetry or SwiftUI. Use
-``TraceStore`` and ``LogStore`` to apply redaction and resource limits before
-telemetry enters memory. Read snapshots directly or observe bounded store
-changes through their asynchronous change streams.
+``TraceStore``, ``LogStore``, and ``MetricStore`` apply redaction and resource
+limits before telemetry enters memory. Read immutable snapshots directly or
+observe bounded store changes through their asynchronous change streams.
 
 ## Topics
 
@@ -16,6 +16,9 @@ changes through their asynchronous change streams.
 - ``SpanSnapshot``
 - ``TraceSnapshot``
 - ``LogSnapshot``
+- ``MetricSnapshot``
+- ``MetricSeriesSnapshot``
+- ``MetricPointSnapshot``
 - ``SpanTreeNode``
 - ``TelemetryAttributeValue``
 
@@ -23,6 +26,9 @@ changes through their asynchronous change streams.
 
 - ``TraceStore``
 - ``LogStore``
+- ``MetricStore``
+- ``MetricStoreConfiguration``
+- ``MetricStoreStatistics``
 - ``TraceStoreConfiguration``
 - ``TraceStoreStatistics``
 - ``AttributeRedactor``

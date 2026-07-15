@@ -129,11 +129,6 @@ private struct MetricDetailView: View {
         .onAppear {
             selectedSeriesID = selectedSeriesID ?? metric.series.first?.id
         }
-        .onChange(of: metric.series.map(\.id)) { ids in
-            if let selectedSeriesID, !ids.contains(selectedSeriesID) {
-                self.selectedSeriesID = ids.first
-            }
-        }
     }
 
     private var selectedSeries: MetricSeriesSnapshot? {

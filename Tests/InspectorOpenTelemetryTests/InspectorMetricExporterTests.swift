@@ -6,9 +6,7 @@ import Testing
 
 @Test
 func sdkMetricsAreStoredWithKindsAndMetadata() async throws {
-    let store = MetricStore(
-        clock: { TelemetryTimestamp(nanosecondsSinceEpoch: 0) }
-    )
+    let store = MetricStore()
     let exporter = InspectorMetricExporter(store: store)
     let reader = PeriodicMetricReaderBuilder(exporter: exporter)
         .setInterval(timeInterval: 3_600)
