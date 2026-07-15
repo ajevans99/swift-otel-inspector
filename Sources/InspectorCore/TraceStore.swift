@@ -167,7 +167,10 @@ public actor TraceStore {
         let now = clock().nanosecondsSinceEpoch
         let maximumAge = configuration.maximumAge.nanosecondsClamped
         let expiration = oldestEnd.addingReportingOverflow(maximumAge)
-        let expirationTime = expiration.overflow ? UInt64.max : expiration.partialValue
+        let firstExpired = expiration.partialValue.addingReportingOverflow(1)
+        let expirationTime = expiration.overflow || firstExpired.overflow
+            ? UInt64.max
+            : firstExpired.partialValue
         let delay = expirationTime > now ? expirationTime - now : 1
 
         expirationTask = Task { [weak self] in
