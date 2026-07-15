@@ -275,27 +275,12 @@ public actor TraceStore {
             guard let redacted = redactor(entry.key, entry.value) else {
                 return
             }
-            result[entry.key] = truncate(redacted)
-        }
-    }
-
-    private func truncate(_ value: TelemetryAttributeValue) -> TelemetryAttributeValue {
-        switch value {
-        case let .string(value):
-            return .string(value.truncatedUTF8(to: configuration.maximumAttributeValueBytes))
-        case let .array(values):
-            return .array(values.map(truncate))
-        case let .dictionary(values):
-            return .dictionary(values.mapValues(truncate))
-        case let .bytes(value):
-            return .bytes(Data(value.prefix(configuration.maximumAttributeValueBytes)))
-        case .bool, .int, .double:
-            return value
+            result[entry.key] = redacted.truncated(to: configuration.maximumAttributeValueBytes)
         }
     }
 }
 
-private extension Duration {
+extension Duration {
     var nanosecondsClamped: UInt64 {
         let components = self.components
         guard components.seconds >= 0 else {
@@ -309,22 +294,5 @@ private extension Duration {
         }
         let (total, additionOverflow) = scaledSeconds.addingReportingOverflow(nanoseconds)
         return additionOverflow ? .max : total
-    }
-}
-
-private extension String {
-    func truncatedUTF8(to maximumBytes: Int) -> String {
-        guard utf8.count > maximumBytes else {
-            return self
-        }
-
-        var end = utf8.index(utf8.startIndex, offsetBy: maximumBytes)
-        while end > utf8.startIndex {
-            if let result = String(bytes: utf8[..<end], encoding: .utf8) {
-                return result
-            }
-            end = utf8.index(before: end)
-        }
-        return ""
     }
 }
