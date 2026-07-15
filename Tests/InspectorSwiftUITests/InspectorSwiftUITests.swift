@@ -1,7 +1,7 @@
 import InspectorSwiftUI
 import Testing
 
-@Test
+@Test @MainActor
 func placeholderCanBeCreated() {
     _ = InspectorPlaceholderView()
 }
