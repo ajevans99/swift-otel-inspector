@@ -57,6 +57,7 @@ public actor TraceStore {
     private let clock: Clock
     private var spansByKey: [SpanKey: SpanSnapshot] = [:]
     private var continuations: [UUID: AsyncStream<[TraceSnapshot]>.Continuation] = [:]
+    private var expirationTask: Task<Void, Never>?
 
     public init(
         configuration: TraceStoreConfiguration = TraceStoreConfiguration(),
@@ -75,10 +76,13 @@ public actor TraceStore {
         }
         _ = evictExpired()
         evictToLimits()
+        scheduleExpiration()
         publish()
     }
 
     public func removeAll() {
+        expirationTask?.cancel()
+        expirationTask = nil
         spansByKey.removeAll(keepingCapacity: true)
         publish()
     }
@@ -125,6 +129,14 @@ public actor TraceStore {
         continuations.removeValue(forKey: id)
     }
 
+    private func expireAndReschedule() {
+        expirationTask = nil
+        if evictExpired() {
+            publish()
+        }
+        scheduleExpiration()
+    }
+
     private func publish() {
         let traces = makeTraces()
         for continuation in continuations.values {
@@ -143,6 +155,28 @@ public actor TraceStore {
                 }
                 return $0.traceID < $1.traceID
             }
+    }
+
+    private func scheduleExpiration() {
+        expirationTask?.cancel()
+        expirationTask = nil
+        guard let oldestEnd = spansByKey.values.map(\.endTime.nanosecondsSinceEpoch).min() else {
+            return
+        }
+
+        let now = clock().nanosecondsSinceEpoch
+        let maximumAge = configuration.maximumAge.nanosecondsClamped
+        let expiration = oldestEnd.addingReportingOverflow(maximumAge)
+        let expirationTime = expiration.overflow ? UInt64.max : expiration.partialValue
+        let delay = expirationTime > now ? expirationTime - now : 1
+
+        expirationTask = Task { [weak self] in
+            try? await Task.sleep(for: .nanoseconds(Int64(clamping: delay)))
+            guard !Task.isCancelled else {
+                return
+            }
+            await self?.expireAndReschedule()
+        }
     }
 
     @discardableResult

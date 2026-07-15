@@ -103,6 +103,31 @@ func readsRemoveSpansThatExpiredAfterIngestionStopped() async {
 }
 
 @Test
+func storePublishesScheduledExpirationWithoutFurtherIngestion() async throws {
+    let now = TelemetryTimestamp(date: Date())
+    let store = TraceStore(
+        configuration: TraceStoreConfiguration(maximumAge: .milliseconds(20))
+    )
+    let stream = await store.changes()
+    var iterator = stream.makeAsyncIterator()
+    _ = await iterator.next()
+
+    await store.insert([
+        SpanSnapshot(
+            traceID: TraceID(rawValue: "01"),
+            spanID: SpanID(rawValue: "01"),
+            name: "expiring",
+            startTime: now,
+            endTime: now
+        ),
+    ])
+    #expect(try #require(await iterator.next()).count == 1)
+
+    let expiration = await iterator.next()
+    #expect(try #require(expiration).isEmpty)
+}
+
+@Test
 func changeStreamPublishesInitialAndInsertedSnapshots() async throws {
     let store = TraceStore(
         configuration: TraceStoreConfiguration(maximumAge: .seconds(100)),

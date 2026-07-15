@@ -47,6 +47,28 @@ func shutdownIsIdempotentAndRejectsLaterExports() async {
 }
 
 @Test
+func cancelledAsyncExportIsRejected() async {
+    let exporter = InspectorSpanExporter(store: TraceStore())
+    let task = Task {
+        withUnsafeCurrentTask { $0?.cancel() }
+        return await exporter.export(spans: [], explicitTimeout: 1)
+    }
+
+    #expect(await task.value == .failure)
+}
+
+@Test
+func cancelledFlushReturnsFailurePromptly() async {
+    let exporter = InspectorSpanExporter(store: TraceStore())
+    let task = Task {
+        withUnsafeCurrentTask { $0?.cancel() }
+        return await exporter.flush()
+    }
+
+    #expect(await task.value == .failure)
+}
+
+@Test
 func multiExporterReportsFailureWithoutSkippingInspector() async throws {
     let store = TraceStore()
     let inspector = InspectorSpanExporter(store: store)
