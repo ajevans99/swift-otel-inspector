@@ -197,7 +197,9 @@ private struct TraceTimelineView: View {
     var body: some View {
         List(TraceTimelineItem.items(for: trace, logs: logs)) { item in
             Button {
-                selectedSpanID = item.spanID
+                if let spanID = item.spanID, trace.spans.contains(where: { $0.spanID == spanID }) {
+                    selectedSpanID = spanID
+                }
             } label: {
                 HStack(alignment: .top, spacing: 10) {
                     VStack(spacing: 0) {

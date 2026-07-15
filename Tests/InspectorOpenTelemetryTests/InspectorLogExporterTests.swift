@@ -50,3 +50,45 @@ func logExporterShutdownAndCancellationAreExplicit() async {
     await exporter.shutdown(explicitTimeout: 1)
     #expect(await exporter.export(logRecords: [], explicitTimeout: 1) == .failure)
 }
+
+@Test
+func multiLogExporterReportsFailureWithoutSkippingInspector() async {
+    let store = LogStore()
+    let inspector = InspectorLogExporter(store: store)
+    let multi = MultiLogRecordExporter(
+        logRecordExporters: [FailingLogExporter(), inspector]
+    )
+
+    let result = await multi.export(logRecords: [], explicitTimeout: 1)
+
+    #expect(result == .failure)
+    #expect(await inspector.forceFlush(explicitTimeout: 1) == .success)
+}
+
+private final class FailingLogExporter: LogRecordExporter, @unchecked Sendable {
+    func export(
+        logRecords: [ReadableLogRecord],
+        explicitTimeout: TimeInterval?
+    ) -> ExportResult {
+        .failure
+    }
+
+    func forceFlush(explicitTimeout: TimeInterval?) -> ExportResult {
+        .failure
+    }
+
+    func shutdown(explicitTimeout: TimeInterval?) {}
+
+    func export(
+        logRecords: [ReadableLogRecord],
+        explicitTimeout: TimeInterval?
+    ) async -> ExportResult {
+        .failure
+    }
+
+    func forceFlush(explicitTimeout: TimeInterval?) async -> ExportResult {
+        .failure
+    }
+
+    func shutdown(explicitTimeout: TimeInterval?) async {}
+}

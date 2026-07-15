@@ -60,7 +60,7 @@ public struct LogInspectorView: View {
     }
 
     private var selectedLog: LogSnapshot? {
-        model.logs.first { $0.id == selectedLogID }
+        model.filteredLogs.first { $0.id == selectedLogID }
     }
 }
 
