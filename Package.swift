@@ -25,6 +25,7 @@ let package = Package(
             name: "InspectorOpenTelemetry",
             dependencies: [
                 "InspectorCore",
+                .product(name: "OpenTelemetryApi", package: "opentelemetry-swift-core"),
                 .product(name: "OpenTelemetrySdk", package: "opentelemetry-swift-core"),
             ]
         ),
