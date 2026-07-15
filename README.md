@@ -122,14 +122,15 @@ Embed the viewer wherever developer diagnostics belong:
 TraceInspectorView(store: store)
 ```
 
-Run the included macOS example with:
+Open the standalone example package in Xcode:
 
 ```sh
-swift run InspectorExample
+open Examples/InspectorExample/Package.swift
 ```
 
-The example sends completed spans to both the local inspector and the
-OpenTelemetry stdout exporter.
+Select the `InspectorExampleApp` scheme and run it on an iOS 17 simulator or
+macOS. The example is a separate package consumer and sends completed spans to
+both the local inspector and the OpenTelemetry stdout exporter.
 
 ### Compose with remote export
 

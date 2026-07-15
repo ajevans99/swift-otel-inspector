@@ -14,6 +14,8 @@ jobs:
         run: swift build
       - name: Test
         run: swift test
+      - name: Test external package consumer
+        run: ./Scripts/test-package-consumer.sh
 
   ios:
     runs-on: macos-15
@@ -23,6 +25,14 @@ jobs:
         run: >
           xcodebuild
           -scheme InspectorSwiftUI
+          -destination 'generic/platform=iOS Simulator'
+          CODE_SIGNING_ALLOWED=NO
+          build
+      - name: Build standalone example app
+        working-directory: Examples/InspectorExample
+        run: >
+          xcodebuild
+          -scheme InspectorExampleApp
           -destination 'generic/platform=iOS Simulator'
           CODE_SIGNING_ALLOWED=NO
           build
