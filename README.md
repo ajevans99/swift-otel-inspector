@@ -151,10 +151,11 @@ LogInspectorView(store: logStore)
 MetricInspectorView(store: metricStore)
 ```
 
-Open the standalone example package in Xcode:
+Open the repository workspace in Xcode to browse the library and example
+together:
 
 ```sh
-open Examples/InspectorExample/Package.swift
+open SwiftOTelInspector.xcworkspace
 ```
 
 Select the `InspectorExampleApp` scheme and run it on an iOS 17 simulator or
