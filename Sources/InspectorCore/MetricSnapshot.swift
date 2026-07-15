@@ -228,7 +228,10 @@ public struct MetricSnapshot: Identifiable, Hashable, Codable, Sendable {
         self.id = id ?? MetricID(
             rawValue: Self.canonicalID(
                 name: name,
+                description: description,
+                unit: unit,
                 kind: kind,
+                temporality: temporality,
                 resource: resource,
                 instrumentationScope: instrumentationScope
             )
@@ -249,16 +252,24 @@ public struct MetricSnapshot: Identifiable, Hashable, Codable, Sendable {
 
     private static func canonicalID(
         name: String,
+        description: String,
+        unit: String,
         kind: MetricKind,
+        temporality: MetricAggregationTemporality,
         resource: ResourceSnapshot,
         instrumentationScope: InstrumentationScopeSnapshot
     ) -> String {
         [
             name.metricLengthPrefixed,
+            description.metricLengthPrefixed,
+            unit.metricLengthPrefixed,
             kind.metricCanonicalValue.metricLengthPrefixed,
+            temporality.rawValue.metricLengthPrefixed,
             resource.attributes.metricCanonicalValue.metricLengthPrefixed,
+            (resource.schemaURL ?? "").metricLengthPrefixed,
             instrumentationScope.name.metricLengthPrefixed,
             (instrumentationScope.version ?? "").metricLengthPrefixed,
+            (instrumentationScope.schemaURL ?? "").metricLengthPrefixed,
             instrumentationScope.attributes.metricCanonicalValue.metricLengthPrefixed,
         ].joined(separator: "|")
     }

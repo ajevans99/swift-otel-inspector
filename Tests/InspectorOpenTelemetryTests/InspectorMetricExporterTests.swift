@@ -37,7 +37,6 @@ func sdkMetricsAreStoredWithKindsAndMetadata() async throws {
     histogram.record(value: 125, attributes: ["status": .string("503")])
 
     #expect(provider.forceFlush() == .success)
-    #expect(await exporter.flush() == .success)
 
     let metrics = await store.metrics()
     #expect(metrics.count == 4)

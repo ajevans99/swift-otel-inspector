@@ -1,3 +1,4 @@
+import Foundation
 import InspectorCore
 import Testing
 
@@ -87,6 +88,68 @@ func metricStoreRedactsAttributesBeforeCreatingSeriesIdentity() async throws {
         attributes: ["region": .string("nor")],
         points: []
     ).id)
+}
+
+@Test
+func metricIdentitySeparatesDistinctStreamDescriptors() {
+    let base = metric(series: [series("a", times: [1])])
+    let delta = MetricSnapshot(
+        name: base.name,
+        description: base.description,
+        unit: base.unit,
+        kind: base.kind,
+        temporality: .delta,
+        resource: base.resource,
+        instrumentationScope: base.instrumentationScope,
+        series: base.series
+    )
+    let schema = MetricSnapshot(
+        name: base.name,
+        description: base.description,
+        unit: base.unit,
+        kind: base.kind,
+        temporality: base.temporality,
+        resource: ResourceSnapshot(
+            attributes: base.resource.attributes,
+            schemaURL: "https://opentelemetry.io/schemas/1.30.0"
+        ),
+        instrumentationScope: base.instrumentationScope,
+        series: base.series
+    )
+
+    #expect(base.id != delta.id)
+    #expect(base.id != schema.id)
+}
+
+@Test
+func metricStorePublishesScheduledExpirationWithoutFurtherIngestion() async throws {
+    let now = TelemetryTimestamp(date: Date())
+    let store = MetricStore(
+        configuration: MetricStoreConfiguration(maximumAge: .milliseconds(20))
+    )
+    let stream = await store.changes()
+    var iterator = stream.makeAsyncIterator()
+    _ = await iterator.next()
+
+    await store.insert([
+        metric(
+            series: [
+                MetricSeriesSnapshot(
+                    points: [
+                        MetricPointSnapshot(
+                            startTime: now,
+                            endTime: now,
+                            value: .number(.integer(1))
+                        ),
+                    ]
+                ),
+            ]
+        ),
+    ])
+    #expect(try #require(await iterator.next()).first?.series.first?.points.count == 1)
+
+    let expiration = await iterator.next()
+    #expect(try #require(expiration).isEmpty)
 }
 
 private func metric(series: [MetricSeriesSnapshot]) -> MetricSnapshot {

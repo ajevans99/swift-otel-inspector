@@ -531,7 +531,11 @@ private extension MetricSnapshot {
             + name.utf8.count
             + description.utf8.count
             + unit.utf8.count
+            + (resource.schemaURL?.utf8.count ?? 0)
             + resource.attributes.estimatedByteCount
+            + instrumentationScope.name.utf8.count
+            + (instrumentationScope.version?.utf8.count ?? 0)
+            + (instrumentationScope.schemaURL?.utf8.count ?? 0)
             + instrumentationScope.attributes.estimatedByteCount
             + series.reduce(0) { $0 + $1.estimatedByteCount }
     }

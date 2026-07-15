@@ -23,10 +23,13 @@ public final class InspectorMetricExporter: MetricExporter, @unchecked Sendable 
         guard lifecycle.begin() else {
             return .failure
         }
+        defer { lifecycle.complete() }
+        let completion = DispatchSemaphore(value: 0)
         Task {
-            defer { lifecycle.complete() }
             await store.insert(snapshots)
+            completion.signal()
         }
+        completion.wait()
         return .success
     }
 

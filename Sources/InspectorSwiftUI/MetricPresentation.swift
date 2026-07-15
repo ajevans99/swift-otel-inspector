@@ -36,16 +36,16 @@ public enum MetricPresentation {
         metric: MetricSnapshot,
         series: MetricSeriesSnapshot
     ) -> [MetricChartSample] {
-        let numberPoints = series.points.compactMap { point -> (MetricPointSnapshot, Double)? in
+        let numberPoints = series.points.compactMap { point -> (MetricPointSnapshot, MetricNumber)? in
             guard case let .number(number) = point.value else {
                 return nil
             }
-            return (point, number.doubleValue)
+            return (point, number)
         }
         switch metric.kind {
         case .gauge, .sum(monotonic: false):
             return numberPoints.map {
-                MetricChartSample(timestamp: $0.0.endTime, value: $0.1)
+                MetricChartSample(timestamp: $0.0.endTime, value: $0.1.doubleValue)
             }
         case .sum(monotonic: true):
             return metric.temporality == .delta
@@ -72,6 +72,31 @@ public enum MetricPresentation {
         }
     }
 
+    public static func exponentialHistogramBuckets(
+        _ histogram: MetricExponentialHistogramSnapshot
+    ) -> [MetricHistogramBucket] {
+        let negative = histogram.negative.bucketCounts.enumerated().map {
+            MetricHistogramBucket(
+                index: $0.offset,
+                label: "neg \($0.offset + histogram.negative.offset)",
+                count: $0.element
+            )
+        }
+        let zero = MetricHistogramBucket(
+            index: negative.count,
+            label: "zero",
+            count: histogram.zeroCount
+        )
+        let positive = histogram.positive.bucketCounts.enumerated().map {
+            MetricHistogramBucket(
+                index: negative.count + 1 + $0.offset,
+                label: "pos \($0.offset + histogram.positive.offset)",
+                count: $0.element
+            )
+        }
+        return negative + [zero] + positive
+    }
+
     public static func latestPoint(in series: MetricSeriesSnapshot) -> MetricPointSnapshot? {
         series.points.last
     }
@@ -87,18 +112,19 @@ public enum MetricPresentation {
     }
 
     private static func cumulativeRates(
-        _ points: [(MetricPointSnapshot, Double)]
+        _ points: [(MetricPointSnapshot, MetricNumber)]
     ) -> [MetricChartSample] {
         zip(points, points.dropFirst()).compactMap { previous, current in
+            let reset = current.0.startTime != previous.0.startTime
+                || isLess(current.1, than: previous.1)
             let elapsed = elapsedSeconds(
-                from: previous.0.endTime,
+                from: reset ? current.0.startTime : previous.0.endTime,
                 to: current.0.endTime
             )
             guard elapsed > 0 else {
                 return nil
             }
-            let reset = current.0.startTime != previous.0.startTime || current.1 < previous.1
-            let delta = reset ? current.1 : current.1 - previous.1
+            let delta = reset ? current.1.doubleValue : difference(current.1, previous.1)
             return MetricChartSample(
                 timestamp: current.0.endTime,
                 value: delta / elapsed,
@@ -108,14 +134,35 @@ public enum MetricPresentation {
     }
 
     private static func deltaRates(
-        _ points: [(MetricPointSnapshot, Double)]
+        _ points: [(MetricPointSnapshot, MetricNumber)]
     ) -> [MetricChartSample] {
         points.compactMap { point, value in
             let elapsed = elapsedSeconds(from: point.startTime, to: point.endTime)
             guard elapsed > 0 else {
                 return nil
             }
-            return MetricChartSample(timestamp: point.endTime, value: value / elapsed)
+            return MetricChartSample(timestamp: point.endTime, value: value.doubleValue / elapsed)
+        }
+    }
+
+    private static func difference(_ current: MetricNumber, _ previous: MetricNumber) -> Double {
+        switch (current, previous) {
+        case let (.integer(current), .integer(previous)):
+            let (difference, overflow) = current.subtractingReportingOverflow(previous)
+            return overflow
+                ? Double(current) - Double(previous)
+                : Double(difference)
+        default:
+            return current.doubleValue - previous.doubleValue
+        }
+    }
+
+    private static func isLess(_ current: MetricNumber, than previous: MetricNumber) -> Bool {
+        switch (current, previous) {
+        case let (.integer(current), .integer(previous)):
+            current < previous
+        default:
+            current.doubleValue < previous.doubleValue
         }
     }
 

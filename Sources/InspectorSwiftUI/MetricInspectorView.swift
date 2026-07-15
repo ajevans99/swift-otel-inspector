@@ -49,6 +49,7 @@ public struct MetricInspectorView: View {
         } detail: {
             if let selectedMetric {
                 MetricDetailView(metric: selectedMetric)
+                    .id(selectedMetric.id)
             } else {
                 MetricPlaceholder(
                     title: "Select a Metric",
@@ -169,7 +170,7 @@ private struct MetricDetailView: View {
     @ViewBuilder
     private var seriesPicker: some View {
         if metric.series.count > 1 {
-            Picker("Series", selection: $selectedSeriesID) {
+            Picker("Series", selection: seriesSelection) {
                 ForEach(metric.series) { series in
                     Text(MetricPresentation.seriesLabel(series))
                         .tag(Optional(series.id))
@@ -177,6 +178,17 @@ private struct MetricDetailView: View {
             }
             .pickerStyle(.menu)
         }
+    }
+
+    private var seriesSelection: Binding<MetricSeriesID?> {
+        Binding(
+            get: {
+                metric.series.contains { $0.id == selectedSeriesID }
+                    ? selectedSeriesID
+                    : metric.series.first?.id
+            },
+            set: { selectedSeriesID = $0 }
+        )
     }
 
     @ViewBuilder
@@ -239,15 +251,11 @@ private struct MetricDetailView: View {
     private func exponentialHistogramChart(
         _ histogram: MetricExponentialHistogramSnapshot
     ) -> some View {
-        let buckets = histogram.negative.bucketCounts.enumerated().map {
-            ("neg \($0.offset + histogram.negative.offset)", $0.element)
-        } + histogram.positive.bucketCounts.enumerated().map {
-            ("pos \($0.offset + histogram.positive.offset)", $0.element)
-        }
-        return Chart(Array(buckets.enumerated()), id: \.offset) { _, bucket in
+        let buckets = MetricPresentation.exponentialHistogramBuckets(histogram)
+        return Chart(buckets) { bucket in
             BarMark(
-                x: .value("Bucket index", bucket.0),
-                y: .value("Count", bucket.1)
+                x: .value("Bucket index", bucket.label),
+                y: .value("Count", bucket.count)
             )
             .foregroundStyle(MetricStyle.color(for: metric.kind).gradient)
         }
