@@ -21,3 +21,20 @@ func fixtureDrivesCompleteDistributedTracePreview() throws {
     #expect(spans.flatMap(\.events).contains { $0.name == "exception" })
     #expect(spans.flatMap(\.links).count == 1)
 }
+
+@Test
+func metricFixtureDrivesChartPreviews() throws {
+    let fixtureURL = URL(fileURLWithPath: #filePath)
+        .deletingLastPathComponent()
+        .deletingLastPathComponent()
+        .deletingLastPathComponent()
+        .appendingPathComponent("fixtures/otlp/sync-metrics.json")
+    let metrics = try OTLPPreviewFixtureDecoder.decodeMetrics(Data(contentsOf: fixtureURL))
+
+    #expect(metrics.count == 8)
+    #expect(Set(metrics.compactMap(\.resource.serviceName)) == ["ExampleSyncApp", "sync-api"])
+    #expect(metrics.contains { $0.kind == .sum(monotonic: true) })
+    #expect(metrics.contains { $0.kind == .gauge })
+    #expect(metrics.contains { $0.kind == .histogram })
+    #expect(metrics.flatMap(\.series).flatMap(\.points).flatMap(\.exemplars).count == 3)
+}

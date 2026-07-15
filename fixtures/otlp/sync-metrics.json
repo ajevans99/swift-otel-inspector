@@ -1,0 +1,384 @@
+{
+  "resourceMetrics": [
+    {
+      "resource": {
+        "attributes": [
+          {
+            "key": "service.name",
+            "value": {
+              "stringValue": "ExampleSyncApp"
+            }
+          },
+          {
+            "key": "service.version",
+            "value": {
+              "stringValue": "1.4.0"
+            }
+          },
+          {
+            "key": "deployment.environment.name",
+            "value": {
+              "stringValue": "development"
+            }
+          }
+        ]
+      },
+      "scopeMetrics": [
+        {
+          "scope": {
+            "name": "com.example.sync",
+            "version": "1.4.0"
+          },
+          "metrics": [
+            {
+              "name": "sync.requests",
+              "description": "Completed synchronization attempts",
+              "unit": "{request}",
+              "sum": {
+                "aggregationTemporality": 2,
+                "isMonotonic": true,
+                "dataPoints": [
+                  {
+                    "startTimeUnixNano": "1720454300000000000",
+                    "timeUnixNano": "1720454400000000000",
+                    "asInt": "1",
+                    "attributes": [
+                      {
+                        "key": "sync.reason",
+                        "value": {
+                          "stringValue": "background"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "name": "sync.queue.depth",
+              "description": "Pending outbox items",
+              "unit": "{item}",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "timeUnixNano": "1720454400000000000",
+                    "asInt": "5",
+                    "attributes": [
+                      {
+                        "key": "queue.name",
+                        "value": {
+                          "stringValue": "outbox"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "name": "sync.duration",
+              "description": "Synchronization attempt duration",
+              "unit": "ms",
+              "histogram": {
+                "aggregationTemporality": 2,
+                "dataPoints": [
+                  {
+                    "startTimeUnixNano": "1720454300000000000",
+                    "timeUnixNano": "1720454400000000000",
+                    "count": "1",
+                    "sum": 180,
+                    "min": 180,
+                    "max": 180,
+                    "explicitBounds": [
+                      50,
+                      100,
+                      250,
+                      500
+                    ],
+                    "bucketCounts": [
+                      "0",
+                      "0",
+                      "1",
+                      "0",
+                      "0"
+                    ],
+                    "attributes": [
+                      {
+                        "key": "sync.result",
+                        "value": {
+                          "stringValue": "ok"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "schemaUrl": "https://opentelemetry.io/schemas/1.27.0"
+        }
+      ],
+      "schemaUrl": "https://opentelemetry.io/schemas/1.27.0"
+    },
+    {
+      "resource": {
+        "attributes": [
+          {
+            "key": "service.name",
+            "value": {
+              "stringValue": "ExampleSyncApp"
+            }
+          },
+          {
+            "key": "service.version",
+            "value": {
+              "stringValue": "1.4.0"
+            }
+          },
+          {
+            "key": "deployment.environment.name",
+            "value": {
+              "stringValue": "development"
+            }
+          }
+        ]
+      },
+      "scopeMetrics": [
+        {
+          "scope": {
+            "name": "com.example.sync",
+            "version": "1.4.0"
+          },
+          "metrics": [
+            {
+              "name": "sync.requests",
+              "description": "Completed synchronization attempts",
+              "unit": "{request}",
+              "sum": {
+                "aggregationTemporality": 2,
+                "isMonotonic": true,
+                "dataPoints": [
+                  {
+                    "startTimeUnixNano": "1720454300000000000",
+                    "timeUnixNano": "1720454400380000000",
+                    "asInt": "2",
+                    "attributes": [
+                      {
+                        "key": "sync.reason",
+                        "value": {
+                          "stringValue": "background"
+                        }
+                      }
+                    ],
+                    "exemplars": [
+                      {
+                        "timeUnixNano": "1720454400380000000",
+                        "asInt": "1",
+                        "traceId": "4fd0b7e26aa34d1f9f75d49e6bc22a1b",
+                        "spanId": "7c4e0f8a1b3d5e60"
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "name": "sync.queue.depth",
+              "description": "Pending outbox items",
+              "unit": "{item}",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "timeUnixNano": "1720454400380000000",
+                    "asInt": "1",
+                    "attributes": [
+                      {
+                        "key": "queue.name",
+                        "value": {
+                          "stringValue": "outbox"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "name": "sync.duration",
+              "description": "Synchronization attempt duration",
+              "unit": "ms",
+              "histogram": {
+                "aggregationTemporality": 2,
+                "dataPoints": [
+                  {
+                    "startTimeUnixNano": "1720454300000000000",
+                    "timeUnixNano": "1720454400380000000",
+                    "count": "2",
+                    "sum": 560,
+                    "min": 180,
+                    "max": 380,
+                    "explicitBounds": [
+                      50,
+                      100,
+                      250,
+                      500
+                    ],
+                    "bucketCounts": [
+                      "0",
+                      "0",
+                      "1",
+                      "1",
+                      "0"
+                    ],
+                    "attributes": [
+                      {
+                        "key": "sync.result",
+                        "value": {
+                          "stringValue": "error"
+                        }
+                      }
+                    ],
+                    "exemplars": [
+                      {
+                        "timeUnixNano": "1720454400380000000",
+                        "asDouble": 380,
+                        "filteredAttributes": [
+                          {
+                            "key": "http.response.status_code",
+                            "value": {
+                              "intValue": "503"
+                            }
+                          }
+                        ],
+                        "traceId": "4fd0b7e26aa34d1f9f75d49e6bc22a1b",
+                        "spanId": "2233445566778899"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "schemaUrl": "https://opentelemetry.io/schemas/1.27.0"
+        }
+      ],
+      "schemaUrl": "https://opentelemetry.io/schemas/1.27.0"
+    },
+    {
+      "resource": {
+        "attributes": [
+          {
+            "key": "service.name",
+            "value": {
+              "stringValue": "sync-api"
+            }
+          },
+          {
+            "key": "service.version",
+            "value": {
+              "stringValue": "2024.7.8"
+            }
+          },
+          {
+            "key": "service.instance.id",
+            "value": {
+              "stringValue": "sync-api-local-1"
+            }
+          }
+        ]
+      },
+      "scopeMetrics": [
+        {
+          "scope": {
+            "name": "com.example.sync.server",
+            "version": "2024.7.8"
+          },
+          "metrics": [
+            {
+              "name": "http.server.request.duration",
+              "description": "Server request duration",
+              "unit": "ms",
+              "histogram": {
+                "aggregationTemporality": 2,
+                "dataPoints": [
+                  {
+                    "startTimeUnixNano": "1720454300000000000",
+                    "timeUnixNano": "1720454400340000000",
+                    "count": "3",
+                    "sum": 510,
+                    "min": 45,
+                    "max": 290,
+                    "explicitBounds": [
+                      50,
+                      100,
+                      250,
+                      500
+                    ],
+                    "bucketCounts": [
+                      "1",
+                      "0",
+                      "1",
+                      "1",
+                      "0"
+                    ],
+                    "attributes": [
+                      {
+                        "key": "http.request.method",
+                        "value": {
+                          "stringValue": "POST"
+                        }
+                      },
+                      {
+                        "key": "http.route",
+                        "value": {
+                          "stringValue": "/v1/sync"
+                        }
+                      }
+                    ],
+                    "exemplars": [
+                      {
+                        "timeUnixNano": "1720454400290000000",
+                        "asDouble": 290,
+                        "traceId": "4fd0b7e26aa34d1f9f75d49e6bc22a1b",
+                        "spanId": "deadbeefcafefeed"
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "name": "db.client.connections.usage",
+              "description": "Open database connections",
+              "unit": "{connection}",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "timeUnixNano": "1720454400340000000",
+                    "asInt": "6",
+                    "attributes": [
+                      {
+                        "key": "pool.name",
+                        "value": {
+                          "stringValue": "primary"
+                        }
+                      },
+                      {
+                        "key": "state",
+                        "value": {
+                          "stringValue": "used"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "schemaUrl": "https://opentelemetry.io/schemas/1.27.0"
+        }
+      ],
+      "schemaUrl": "https://opentelemetry.io/schemas/1.27.0"
+    }
+  ]
+}
