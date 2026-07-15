@@ -78,6 +78,11 @@ stable when the upstream SDK changes.
 - macOS 13 or newer.
 - OpenTelemetry Swift Core 2.5.1.
 
+SwiftOTelInspector follows Semantic Versioning. `VERSION` and
+`InspectorCore.version` identify the planned release, and a `v<version>` tag
+publishes a GitHub release only after version validation, tests, a release
+build, and the external consumer check pass.
+
 ## Installation
 
 Add this repository as a Swift Package dependency, then select only the products

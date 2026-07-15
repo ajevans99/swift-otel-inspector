@@ -12,6 +12,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build
         run: swift build
+      - name: Validate version
+        run: ./Scripts/validate-version.sh
       - name: Test
         run: swift test
       - name: Test external package consumer
