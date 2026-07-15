@@ -25,8 +25,8 @@ public final class InspectorSpanExporter: SpanExporter, @unchecked Sendable {
         }
 
         Task {
+            defer { pendingExports.leave() }
             await store.insert(snapshots)
-            pendingExports.leave()
         }
         return .success
     }
@@ -47,27 +47,35 @@ public final class InspectorSpanExporter: SpanExporter, @unchecked Sendable {
         spans: [SpanData],
         explicitTimeout: TimeInterval? = nil
     ) async -> SpanExporterResultCode {
+        guard !Task.isCancelled else {
+            return .failure
+        }
         let snapshots = spans.map(SpanSnapshot.init)
         guard beginExport() else {
             return .failure
         }
 
+        defer { pendingExports.leave() }
         await store.insert(snapshots)
-        pendingExports.leave()
         return .success
     }
 
     public func flush(explicitTimeout: TimeInterval? = nil) async -> SpanExporterResultCode {
-        await withCheckedContinuation { continuation in
-            let waiter = FlushWaiter(continuation: continuation)
-            pendingExports.notify(queue: .global()) {
-                waiter.resume(returning: .success)
-            }
-            if let explicitTimeout {
-                DispatchQueue.global().asyncAfter(deadline: deadline(for: explicitTimeout)) {
-                    waiter.resume(returning: .failure)
+        let waiter = FlushWaiter()
+        return await withTaskCancellationHandler {
+            await withCheckedContinuation { continuation in
+                waiter.install(continuation)
+                pendingExports.notify(queue: .global()) {
+                    waiter.resume(returning: .success)
+                }
+                if let explicitTimeout {
+                    DispatchQueue.global().asyncAfter(deadline: deadline(for: explicitTimeout)) {
+                        waiter.resume(returning: .failure)
+                    }
                 }
             }
+        } onCancel: {
+            waiter.resume(returning: .failure)
         }
     }
 
@@ -104,15 +112,29 @@ public final class InspectorSpanExporter: SpanExporter, @unchecked Sendable {
 private final class FlushWaiter: @unchecked Sendable {
     private let lock = NSLock()
     private var continuation: CheckedContinuation<SpanExporterResultCode, Never>?
+    private var pendingResult: SpanExporterResultCode?
 
-    init(continuation: CheckedContinuation<SpanExporterResultCode, Never>) {
-        self.continuation = continuation
+    func install(_ continuation: CheckedContinuation<SpanExporterResultCode, Never>) {
+        let result = lock.withLock {
+            guard let pendingResult else {
+                self.continuation = continuation
+                return nil as SpanExporterResultCode?
+            }
+            return pendingResult
+        }
+        if let result {
+            continuation.resume(returning: result)
+        }
     }
 
     func resume(returning result: SpanExporterResultCode) {
-        let continuation = lock.withLock {
-            defer { self.continuation = nil }
-            return self.continuation
+        let continuation: CheckedContinuation<SpanExporterResultCode, Never>? = lock.withLock {
+            guard let continuation = self.continuation else {
+                pendingResult = pendingResult ?? result
+                return nil
+            }
+            self.continuation = nil
+            return continuation
         }
         continuation?.resume(returning: result)
     }

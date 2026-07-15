@@ -1,0 +1,33 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Validate version and tag
+        run: ./Scripts/validate-version.sh
+      - name: Test
+        run: swift test
+      - name: Build release
+        run: swift build -c release
+      - name: Test external package consumer
+        run: ./Scripts/test-package-consumer.sh
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          gh release create "$GITHUB_REF_NAME"
+          --verify-tag
+          --generate-notes
+          --title "SwiftOTelInspector ${GITHUB_REF_NAME#v}"

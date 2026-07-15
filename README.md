@@ -78,6 +78,11 @@ stable when the upstream SDK changes.
 - macOS 13 or newer.
 - OpenTelemetry Swift Core 2.5.1.
 
+SwiftOTelInspector follows Semantic Versioning. `VERSION` and
+`InspectorCore.version` identify the planned release, and a `v<version>` tag
+publishes a GitHub release only after version validation, tests, a release
+build, and the external consumer check pass.
+
 ## Installation
 
 Add this repository as a Swift Package dependency, then select only the products
@@ -122,14 +127,15 @@ Embed the viewer wherever developer diagnostics belong:
 TraceInspectorView(store: store)
 ```
 
-Run the included macOS example with:
+Open the standalone example package in Xcode:
 
 ```sh
-swift run InspectorExample
+open Examples/InspectorExample/Package.swift
 ```
 
-The example sends completed spans to both the local inspector and the
-OpenTelemetry stdout exporter.
+Select the `InspectorExampleApp` scheme and run it on an iOS 17 simulator or
+macOS. The example is a separate package consumer and sends completed spans to
+both the local inspector and the OpenTelemetry stdout exporter.
 
 ### Compose with remote export
 
@@ -189,11 +195,12 @@ is reliable.
 5. Group spans by trace ID.
 6. Render a list of traces.
 7. Render expandable parent-child span trees, including orphan spans.
-8. Show span name, duration, status, service, attributes, events, and timestamps.
-9. Filter traces and spans by name and status.
-10. Compose with a remote exporter without changing its sampling, flush,
+8. Render a relative-time waterfall for latency analysis.
+9. Show span name, duration, status, service, attributes, events, and timestamps.
+10. Filter and sort traces by name, service, status, attributes, time, and duration.
+11. Compose with a remote exporter without changing its sampling, flush,
     shutdown, or error behavior.
-11. Provide deterministic tests for ordering, parentage, malformed data,
+12. Provide deterministic tests for ordering, parentage, malformed data,
     eviction, concurrent export, flush, and shutdown.
 
 This is enough to make the package useful while teaching the most important
@@ -208,7 +215,6 @@ and Linux support can be added when they have build and test coverage.
 - Counters, gauges, and histogram summaries.
 - A unified live timeline across traces, logs, and metrics.
 - Small Swift Charts visualizations for metric history.
-- Search and filtering across typed attributes.
 - JSON and OTLP diagnostic bundle export.
 - Attribute allowlists and configurable redaction.
 - Optional encrypted local persistence.
@@ -252,8 +258,8 @@ Sensitive attributes should be rejected or transformed before entering the local
 store. Hiding values only in the UI still leaves private data resident in memory
 or diagnostic exports.
 
-Version 0.1 should truncate all attribute values to a configurable maximum and
-provide a redaction hook that runs before snapshots enter the store. Applications
+Version 0.1 truncates all attribute values to a configurable maximum and
+provides a redaction hook that runs before snapshots enter the store. Applications
 remain responsible for choosing which domain-specific attributes are safe.
 
 ### Make the viewer optional
@@ -317,7 +323,8 @@ content, application domain identifiers, or other private payloads.
 
 ## Status
 
-Version 0.1 development is underway. The package includes immutable trace
-snapshots, a bounded actor-owned store, an OpenTelemetry Swift span exporter, a
-fixture-backed SwiftUI trace browser, tests, and an example application. Logs,
-metrics, persistence, and active-span inspection remain future work.
+Version 0.1 is prepared as a release candidate. The package includes immutable
+trace snapshots, a bounded actor-owned store with scheduled expiration, an
+OpenTelemetry Swift span exporter, a fixture-backed SwiftUI tree and waterfall,
+rich filtering, tests, and a standalone example application. Logs, metrics,
+persistence, and active-span inspection remain future work.
