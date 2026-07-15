@@ -22,6 +22,7 @@ public enum TraceSortOrder: String, CaseIterable, Identifiable, Sendable {
 @MainActor
 public final class TraceInspectorModel: ObservableObject {
     @Published public private(set) var traces: [TraceSnapshot] = []
+    @Published public private(set) var logs: [LogSnapshot] = []
     @Published public var searchText = ""
     @Published public var statusFilter: TraceStatusFilter = .all
     @Published public var selectedService: String?
@@ -31,8 +32,9 @@ public final class TraceInspectorModel: ObservableObject {
 
     private let store: TraceStore
     private var observationTask: Task<Void, Never>?
+    private var logObservationTask: Task<Void, Never>?
 
-    public init(store: TraceStore) {
+    public init(store: TraceStore, logStore: LogStore? = nil) {
         self.store = store
         observationTask = Task { [weak self, store] in
             let changes = await store.changes()
@@ -43,10 +45,22 @@ public final class TraceInspectorModel: ObservableObject {
                 self?.traces = traces
             }
         }
+        if let logStore {
+            logObservationTask = Task { [weak self, logStore] in
+                let changes = await logStore.changes()
+                for await logs in changes {
+                    guard !Task.isCancelled else {
+                        return
+                    }
+                    self?.logs = logs
+                }
+            }
+        }
     }
 
     deinit {
         observationTask?.cancel()
+        logObservationTask?.cancel()
     }
 
     public var filteredTraces: [TraceSnapshot] {
@@ -74,6 +88,8 @@ public final class TraceInspectorModel: ObservableObject {
     public func stopObserving() {
         observationTask?.cancel()
         observationTask = nil
+        logObservationTask?.cancel()
+        logObservationTask = nil
     }
 
     private func traceMatchesStatus(_ trace: TraceSnapshot) -> Bool {

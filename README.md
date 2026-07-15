@@ -88,9 +88,9 @@ build, and the external consumer check pass.
 Add this repository as a Swift Package dependency, then select only the products
 the application needs:
 
-- `InspectorCore` provides immutable telemetry models and the bounded store.
-- `InspectorOpenTelemetry` converts completed OpenTelemetry SDK spans.
-- `InspectorSwiftUI` provides the trace browser.
+- `InspectorCore` provides immutable telemetry models and bounded trace and log stores.
+- `InspectorOpenTelemetry` converts completed OpenTelemetry SDK spans and log records.
+- `InspectorSwiftUI` provides trace and structured log browsers.
 
 Applications using the exporter also need the `OpenTelemetrySdk` product from
 [`opentelemetry-swift-core`](https://github.com/open-telemetry/opentelemetry-swift-core).
@@ -119,12 +119,19 @@ let store = TraceStore(
 let inspectorExporter = InspectorSpanExporter(store: store)
 let processor = BatchSpanProcessor(spanExporter: inspectorExporter)
 let tracerProvider = TracerProviderSdk(spanProcessors: [processor])
+
+let logStore = LogStore()
+let logExporter = InspectorLogExporter(store: logStore)
+let loggerProvider = LoggerProviderSdk(
+    logRecordProcessors: [SimpleLogRecordProcessor(logRecordExporter: logExporter)]
+)
 ```
 
 Embed the viewer wherever developer diagnostics belong:
 
 ```swift
-TraceInspectorView(store: store)
+TraceInspectorView(store: store, logStore: logStore)
+LogInspectorView(store: logStore)
 ```
 
 Open the standalone example package in Xcode:
@@ -134,8 +141,9 @@ open Examples/InspectorExample/Package.swift
 ```
 
 Select the `InspectorExampleApp` scheme and run it on an iOS 17 simulator or
-macOS. The example is a separate package consumer and sends completed spans to
-both the local inspector and the OpenTelemetry stdout exporter.
+macOS. The example is a separate package consumer that emits correlated spans
+and logs, sends spans to both local and stdout exporters, and presents dedicated
+trace and log tabs.
 
 ### Compose with remote export
 
@@ -170,7 +178,13 @@ an API service, including cross-resource parentage, semantic convention
 attributes, mixed attribute value types, a retry, exception events, a span link,
 and error status propagation.
 
-The fixture is an OTLP export request body and can be submitted directly to a
+[`fixtures/otlp/sync-logs.json`](fixtures/otlp/sync-logs.json) is the matching
+OTLP/HTTP JSON log export. Its structured records cover multiple severities,
+resource and log attributes, observed timestamps, an exception event, a
+structured body, an uncorrelated application log, and trace/span correlation
+across both services.
+
+The fixtures are OTLP export request bodies and can be submitted directly to a
 generic OTLP/HTTP receiver, such as a local OpenTelemetry Collector. The
 inspector does not provide an OTLP receiver:
 
@@ -179,6 +193,11 @@ curl \
   -H 'Content-Type: application/json' \
   --data-binary @fixtures/otlp/sync-trace.json \
   http://localhost:4318/v1/traces
+
+curl \
+  -H 'Content-Type: application/json' \
+  --data-binary @fixtures/otlp/sync-logs.json \
+  http://localhost:4318/v1/logs
 ```
 
 ## Version 0.1: traces
@@ -211,9 +230,8 @@ and Linux support can be added when they have build and test coverage.
 
 ## Future roadmap
 
-- Correlated structured logs using trace and span context.
 - Counters, gauges, and histogram summaries.
-- A unified live timeline across traces, logs, and metrics.
+- Metric events in the unified trace and log timeline.
 - Small Swift Charts visualizations for metric history.
 - JSON and OTLP diagnostic bundle export.
 - Attribute allowlists and configurable redaction.
@@ -323,8 +341,8 @@ content, application domain identifiers, or other private payloads.
 
 ## Status
 
-Version 0.1 is prepared as a release candidate. The package includes immutable
-trace snapshots, a bounded actor-owned store with scheduled expiration, an
-OpenTelemetry Swift span exporter, a fixture-backed SwiftUI tree and waterfall,
-rich filtering, tests, and a standalone example application. Logs, metrics,
-persistence, and active-span inspection remain future work.
+Version 0.1 provides completed trace inspection. Current development adds
+immutable correlated log snapshots, bounded log storage, an OpenTelemetry Swift
+log exporter, a searchable severity-aware log browser, and a unified trace
+timeline for spans, span events, and logs. Metrics, persistence, and active-span
+inspection remain future work.

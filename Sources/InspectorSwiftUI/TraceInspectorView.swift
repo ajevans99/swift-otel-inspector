@@ -5,8 +5,8 @@ public struct TraceInspectorView: View {
     @StateObject private var model: TraceInspectorModel
     @State private var selectedTraceID: TraceID?
 
-    public init(store: TraceStore) {
-        _model = StateObject(wrappedValue: TraceInspectorModel(store: store))
+    public init(store: TraceStore, logStore: LogStore? = nil) {
+        _model = StateObject(wrappedValue: TraceInspectorModel(store: store, logStore: logStore))
     }
 
     public var body: some View {
@@ -41,7 +41,7 @@ public struct TraceInspectorView: View {
                 }
         } detail: {
             if let trace = selectedTrace {
-                TraceDetailView(trace: trace)
+                TraceDetailView(trace: trace, logs: model.logs)
             } else {
                 InspectorPlaceholderView()
             }
@@ -116,11 +116,13 @@ private struct TraceDetailView: View {
     private enum Presentation: String, CaseIterable, Identifiable {
         case tree = "Tree"
         case waterfall = "Waterfall"
+        case timeline = "Timeline"
 
         var id: Self { self }
     }
 
     let trace: TraceSnapshot
+    let logs: [LogSnapshot]
     @State private var selectedSpanID: SpanID?
     @State private var presentation: Presentation = .tree
 
@@ -140,7 +142,14 @@ private struct TraceDetailView: View {
                     traceTree
                 case .waterfall:
                     SpanWaterfallView(trace: trace, selectedSpanID: $selectedSpanID)
+                case .timeline:
+                    TraceTimelineView(
+                        trace: trace,
+                        logs: logs,
+                        selectedSpanID: $selectedSpanID
+                    )
                 }
+
             }
             .frame(minHeight: 180)
 
@@ -176,6 +185,58 @@ private struct TraceDetailView: View {
                     .buttonStyle(.plain)
                 }
             }
+        }
+    }
+}
+
+private struct TraceTimelineView: View {
+    let trace: TraceSnapshot
+    let logs: [LogSnapshot]
+    @Binding var selectedSpanID: SpanID?
+
+    var body: some View {
+        List(TraceTimelineItem.items(for: trace, logs: logs)) { item in
+            Button {
+                if let spanID = item.spanID, trace.spans.contains(where: { $0.spanID == spanID }) {
+                    selectedSpanID = spanID
+                }
+            } label: {
+                HStack(alignment: .top, spacing: 10) {
+                    VStack(spacing: 0) {
+                        Circle()
+                            .fill(color(for: item.kind))
+                            .frame(width: 9, height: 9)
+                        Rectangle()
+                            .fill(.quaternary)
+                            .frame(width: 1, height: 28)
+                    }
+                    VStack(alignment: .leading, spacing: 3) {
+                        HStack {
+                            Text(item.title)
+                                .font(.callout.weight(.medium))
+                                .lineLimit(1)
+                            Spacer()
+                            Text(LogStyle.time(item.timestamp))
+                                .font(.caption2.monospacedDigit())
+                                .foregroundStyle(.secondary)
+                        }
+                        Text(item.subtitle)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+            .buttonStyle(.plain)
+        }
+        .listStyle(.inset)
+    }
+
+    private func color(for kind: TraceTimelineItem.Kind) -> Color {
+        switch kind {
+        case .spanStarted: .green
+        case .spanEnded: .secondary
+        case .spanEvent: .orange
+        case let .log(severity): LogStyle.color(for: severity)
         }
     }
 }

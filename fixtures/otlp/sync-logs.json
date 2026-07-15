@@ -1,0 +1,216 @@
+{
+  "resourceLogs": [
+    {
+      "resource": {
+        "attributes": [
+          {
+            "key": "service.name",
+            "value": {
+              "stringValue": "ExampleSyncApp"
+            }
+          },
+          {
+            "key": "service.version",
+            "value": {
+              "stringValue": "1.4.0"
+            }
+          },
+          {
+            "key": "deployment.environment.name",
+            "value": {
+              "stringValue": "development"
+            }
+          }
+        ]
+      },
+      "scopeLogs": [
+        {
+          "scope": {
+            "name": "com.example.sync",
+            "version": "1.4.0"
+          },
+          "logRecords": [
+            {
+              "timeUnixNano": "1720454400012000000",
+              "observedTimeUnixNano": "1720454400013000000",
+              "severityNumber": 9,
+              "severityText": "INFO",
+              "body": {
+                "stringValue": "Loaded pending outbox items"
+              },
+              "attributes": [
+                {
+                  "key": "outbox.item_count",
+                  "value": {
+                    "intValue": "3"
+                  }
+                }
+              ],
+              "flags": 1,
+              "traceId": "4fd0b7e26aa34d1f9f75d49e6bc22a1b",
+              "spanId": "1a2b3c4d5e6f7081"
+            },
+            {
+              "timeUnixNano": "1720454400200000000",
+              "severityNumber": 13,
+              "severityText": "WARN",
+              "body": {
+                "stringValue": "Sync request failed; scheduling retry"
+              },
+              "attributes": [
+                {
+                  "key": "retry.attempt",
+                  "value": {
+                    "intValue": "2"
+                  }
+                },
+                {
+                  "key": "retry.delay_ms",
+                  "value": {
+                    "intValue": "100"
+                  }
+                },
+                {
+                  "key": "http.response.status_code",
+                  "value": {
+                    "intValue": "503"
+                  }
+                }
+              ],
+              "flags": 1,
+              "traceId": "4fd0b7e26aa34d1f9f75d49e6bc22a1b",
+              "spanId": "2233445566778899"
+            },
+            {
+              "timeUnixNano": "1720454400390000000",
+              "severityNumber": 5,
+              "severityText": "DEBUG",
+              "body": {
+                "kvlistValue": {
+                  "values": [
+                    {
+                      "key": "state",
+                      "value": {
+                        "stringValue": "waiting"
+                      }
+                    },
+                    {
+                      "key": "pending_items",
+                      "value": {
+                        "intValue": "1"
+                      }
+                    }
+                  ]
+                }
+              },
+              "attributes": [
+                {
+                  "key": "app.lifecycle.state",
+                  "value": {
+                    "stringValue": "background"
+                  }
+                }
+              ]
+            }
+          ],
+          "schemaUrl": "https://opentelemetry.io/schemas/1.27.0"
+        }
+      ],
+      "schemaUrl": "https://opentelemetry.io/schemas/1.27.0"
+    },
+    {
+      "resource": {
+        "attributes": [
+          {
+            "key": "service.name",
+            "value": {
+              "stringValue": "sync-api"
+            }
+          },
+          {
+            "key": "service.version",
+            "value": {
+              "stringValue": "2024.7.8"
+            }
+          },
+          {
+            "key": "service.instance.id",
+            "value": {
+              "stringValue": "sync-api-local-1"
+            }
+          }
+        ]
+      },
+      "scopeLogs": [
+        {
+          "scope": {
+            "name": "com.example.sync.server",
+            "version": "2024.7.8"
+          },
+          "logRecords": [
+            {
+              "timeUnixNano": "1720454400085000000",
+              "severityNumber": 9,
+              "severityText": "INFO",
+              "body": {
+                "stringValue": "Accepted sync batch"
+              },
+              "attributes": [
+                {
+                  "key": "sync.batch_size",
+                  "value": {
+                    "intValue": "3"
+                  }
+                },
+                {
+                  "key": "client.address",
+                  "value": {
+                    "stringValue": "192.0.2.42"
+                  }
+                }
+              ],
+              "flags": 1,
+              "traceId": "4fd0b7e26aa34d1f9f75d49e6bc22a1b",
+              "spanId": "aabbccddeeff0011"
+            },
+            {
+              "timeUnixNano": "1720454400290000000",
+              "observedTimeUnixNano": "1720454400294000000",
+              "severityNumber": 17,
+              "severityText": "ERROR",
+              "body": {
+                "stringValue": "Database write timed out"
+              },
+              "attributes": [
+                {
+                  "key": "error.type",
+                  "value": {
+                    "stringValue": "DatabaseTimeout"
+                  }
+                },
+                {
+                  "key": "db.operation.name",
+                  "value": {
+                    "stringValue": "UPDATE"
+                  }
+                },
+                {
+                  "key": "exception.stacktrace",
+                  "value": {
+                    "stringValue": "SyncRepository.save(SyncRepository.swift:84)\nSyncHandler.handle(SyncHandler.swift:41)"
+                  }
+                }
+              ],
+              "eventName": "exception",
+              "flags": 1,
+              "traceId": "4fd0b7e26aa34d1f9f75d49e6bc22a1b",
+              "spanId": "deadbeefcafefeed"
+            }
+          ],
+          "schemaUrl": "https://opentelemetry.io/schemas/1.27.0"
+        }
+      ],
+      "schemaUrl": "https://opentelemetry.io/schemas/1.27.0"
+    }
+  ]
+}
