@@ -6,9 +6,7 @@ import OpenTelemetrySdk
 public final class InspectorSpanExporter: SpanExporter, @unchecked Sendable {
     public let store: TraceStore
 
-    private let lock = NSLock()
-    private let pendingExports = DispatchGroup()
-    private var isShutdown = false
+    private let lifecycle = ExporterLifecycle()
 
     public init(store: TraceStore) {
         self.store = store
@@ -20,25 +18,23 @@ public final class InspectorSpanExporter: SpanExporter, @unchecked Sendable {
         explicitTimeout: TimeInterval? = nil
     ) -> SpanExporterResultCode {
         let snapshots = spans.map(SpanSnapshot.init)
-        guard beginExport() else {
+        guard lifecycle.begin() else {
             return .failure
         }
 
         Task {
-            defer { pendingExports.leave() }
+            defer { lifecycle.complete() }
             await store.insert(snapshots)
         }
         return .success
     }
 
     public func flush(explicitTimeout: TimeInterval? = nil) -> SpanExporterResultCode {
-        waitForPending(explicitTimeout: explicitTimeout)
+        lifecycle.wait(explicitTimeout: explicitTimeout) ? .success : .failure
     }
 
     public func shutdown(explicitTimeout: TimeInterval? = nil) {
-        lock.withLock {
-            isShutdown = true
-        }
+        lifecycle.markShutdown()
         _ = flush(explicitTimeout: explicitTimeout)
     }
 
@@ -51,92 +47,22 @@ public final class InspectorSpanExporter: SpanExporter, @unchecked Sendable {
             return .failure
         }
         let snapshots = spans.map(SpanSnapshot.init)
-        guard beginExport() else {
+        guard lifecycle.begin() else {
             return .failure
         }
 
-        defer { pendingExports.leave() }
+        defer { lifecycle.complete() }
         await store.insert(snapshots)
         return .success
     }
 
     public func flush(explicitTimeout: TimeInterval? = nil) async -> SpanExporterResultCode {
-        let waiter = FlushWaiter()
-        return await withTaskCancellationHandler {
-            await withCheckedContinuation { continuation in
-                waiter.install(continuation)
-                pendingExports.notify(queue: .global()) {
-                    waiter.resume(returning: .success)
-                }
-                if let explicitTimeout {
-                    DispatchQueue.global().asyncAfter(deadline: deadline(for: explicitTimeout)) {
-                        waiter.resume(returning: .failure)
-                    }
-                }
-            }
-        } onCancel: {
-            waiter.resume(returning: .failure)
-        }
+        await lifecycle.wait(explicitTimeout: explicitTimeout) ? .success : .failure
     }
 
     public func shutdown(explicitTimeout: TimeInterval? = nil) async {
-        lock.withLock {
-            isShutdown = true
-        }
+        lifecycle.markShutdown()
         _ = await flush(explicitTimeout: explicitTimeout)
-    }
-
-    private func beginExport() -> Bool {
-        lock.withLock {
-            guard !isShutdown else {
-                return false
-            }
-            pendingExports.enter()
-            return true
-        }
-    }
-
-    private func waitForPending(explicitTimeout: TimeInterval?) -> SpanExporterResultCode {
-        let result = pendingExports.wait(timeout: deadline(for: explicitTimeout))
-        return result == .success ? .success : .failure
-    }
-
-    private func deadline(for timeout: TimeInterval?) -> DispatchTime {
-        guard let timeout else {
-            return .distantFuture
-        }
-        return .now() + max(0, timeout)
-    }
-}
-
-private final class FlushWaiter: @unchecked Sendable {
-    private let lock = NSLock()
-    private var continuation: CheckedContinuation<SpanExporterResultCode, Never>?
-    private var pendingResult: SpanExporterResultCode?
-
-    func install(_ continuation: CheckedContinuation<SpanExporterResultCode, Never>) {
-        let result = lock.withLock {
-            guard let pendingResult else {
-                self.continuation = continuation
-                return nil as SpanExporterResultCode?
-            }
-            return pendingResult
-        }
-        if let result {
-            continuation.resume(returning: result)
-        }
-    }
-
-    func resume(returning result: SpanExporterResultCode) {
-        let continuation: CheckedContinuation<SpanExporterResultCode, Never>? = lock.withLock {
-            guard let continuation = self.continuation else {
-                pendingResult = pendingResult ?? result
-                return nil
-            }
-            self.continuation = nil
-            return continuation
-        }
-        continuation?.resume(returning: result)
     }
 }
 
@@ -178,7 +104,7 @@ public extension SpanSnapshot {
     }
 }
 
-private extension TelemetryAttributeValue {
+extension TelemetryAttributeValue {
     init(_ value: AttributeValue) {
         switch value {
         case let .string(value):
