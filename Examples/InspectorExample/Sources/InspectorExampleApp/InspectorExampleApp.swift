@@ -62,7 +62,7 @@ private final class InspectorExampleTelemetry: ObservableObject {
         let metricStore = self.metricStore
         let resource = Resource(attributes: [
             "service.name": .string("InspectorExample"),
-            "service.version": .string("0.2.0-dev"),
+            "service.version": .string("0.2.0"),
             "deployment.environment.name": .string("development"),
         ])
 
@@ -179,7 +179,7 @@ private final class InspectorExampleTelemetry: ObservableObject {
     ) {
         let tracer = tracerProvider.get(
             instrumentationName: "SwiftOTelInspector.Example",
-            instrumentationVersion: "0.2.0-dev"
+            instrumentationVersion: "0.2.0"
         )
         let root = tracer.spanBuilder(spanName: "example.refresh")
             .setSpanKind(spanKind: .internal)

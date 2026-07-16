@@ -31,9 +31,9 @@ jobs:
           CODE_SIGNING_ALLOWED=NO
           build
       - name: Build standalone example app
-        working-directory: Examples/InspectorExample
         run: >
           xcodebuild
+          -workspace SwiftOTelInspector.xcworkspace
           -scheme InspectorExampleApp
           -destination 'generic/platform=iOS Simulator'
           CODE_SIGNING_ALLOWED=NO

@@ -21,6 +21,7 @@ let package = Package(
             name: "Consumer",
             dependencies: [
                 .product(name: "InspectorCore", package: "SwiftOTelInspector"),
+                .product(name: "InspectorOpenTelemetry", package: "SwiftOTelInspector"),
                 .product(name: "InspectorSwiftUI", package: "SwiftOTelInspector"),
             ]
         ),
@@ -30,9 +31,11 @@ EOF
 
 cat > "$temporary_directory/Sources/Consumer/main.swift" <<'EOF'
 import InspectorCore
+import InspectorOpenTelemetry
 import InspectorSwiftUI
 
 let store = TraceStore()
+_ = InspectorSpanExporter(store: store)
 _ = TraceInspectorView(store: store)
 print(InspectorCore.version)
 EOF

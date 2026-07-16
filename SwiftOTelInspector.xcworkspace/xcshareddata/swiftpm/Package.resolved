@@ -1,5 +1,5 @@
 {
-  "originHash" : "5b10351827daa14f12925fe2b6c9a3fbd81151b5dcb87521dbd6aee71dfdb28c",
+  "originHash" : "058e78c929977ac36cd345bf11f4908b7e45f3fa70a68b95bb84f35bcab4a6f0",
   "pins" : [
     {
       "identity" : "opentelemetry-swift-core",

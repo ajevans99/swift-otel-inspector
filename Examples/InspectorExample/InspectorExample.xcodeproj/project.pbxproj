@@ -1,0 +1,394 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		019DD5D0048077E2C83D342F /* StdoutExporter in Frameworks */ = {isa = PBXBuildFile; productRef = 71B1A19A37AFAD1DFBA29113 /* StdoutExporter */; };
+		049D1A1FE97E75281727F102 /* InspectorOpenTelemetry in Frameworks */ = {isa = PBXBuildFile; productRef = 24AED34AF10B2B055B81449C /* InspectorOpenTelemetry */; };
+		2BDDC2E1A6F92DBDF18F0E86 /* InspectorExampleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6C15FE98F204624A2AC7F4 /* InspectorExampleApp.swift */; };
+		5AAFA76A50D02F247FD152B7 /* OpenTelemetryApi in Frameworks */ = {isa = PBXBuildFile; productRef = E152DEAD172D73F2FA549839 /* OpenTelemetryApi */; };
+		5E974769ABBD13DCC6EAA3E1 /* InspectorSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = 8A672EB2071EECA2D02A73F1 /* InspectorSwiftUI */; };
+		630E27C676AC4A44C46A8FB6 /* OpenTelemetrySdk in Frameworks */ = {isa = PBXBuildFile; productRef = 393A5786FD89F2EEF920AB6E /* OpenTelemetrySdk */; };
+		7F897C66FF2D0BF13338BC95 /* InspectorCore in Frameworks */ = {isa = PBXBuildFile; productRef = 070B90B4F1D23B097FE934DC /* InspectorCore */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		1F6C15FE98F204624A2AC7F4 /* InspectorExampleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InspectorExampleApp.swift; sourceTree = "<group>"; };
+		83D27E57F927A53F619615D3 /* InspectorExampleApp.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = InspectorExampleApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C5C7141B0FF2EE25C49C6A78 /* swift-otel-inspector */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "swift-otel-inspector"; path = ../..; sourceTree = SOURCE_ROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		70ED97F712FBF0BA6EC75E75 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7F897C66FF2D0BF13338BC95 /* InspectorCore in Frameworks */,
+				049D1A1FE97E75281727F102 /* InspectorOpenTelemetry in Frameworks */,
+				5E974769ABBD13DCC6EAA3E1 /* InspectorSwiftUI in Frameworks */,
+				5AAFA76A50D02F247FD152B7 /* OpenTelemetryApi in Frameworks */,
+				630E27C676AC4A44C46A8FB6 /* OpenTelemetrySdk in Frameworks */,
+				019DD5D0048077E2C83D342F /* StdoutExporter in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		1C61A51A6DE80B527525E22B = {
+			isa = PBXGroup;
+			children = (
+				D10EB833C281635E6E7FBAB6 /* Packages */,
+				2089236BFA28F4C660E9C5C1 /* Sources */,
+				88946FAE7875467F01B0066A /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		2089236BFA28F4C660E9C5C1 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				2776577F1FCBE7E21D73E536 /* InspectorExampleApp */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		2776577F1FCBE7E21D73E536 /* InspectorExampleApp */ = {
+			isa = PBXGroup;
+			children = (
+				1F6C15FE98F204624A2AC7F4 /* InspectorExampleApp.swift */,
+			);
+			path = InspectorExampleApp;
+			sourceTree = "<group>";
+		};
+		88946FAE7875467F01B0066A /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				83D27E57F927A53F619615D3 /* InspectorExampleApp.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		D10EB833C281635E6E7FBAB6 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				C5C7141B0FF2EE25C49C6A78 /* swift-otel-inspector */,
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		F9B5F85D5FB53E7698E2C24B /* InspectorExampleApp */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = EEA0F7743BABF59A25BD116D /* Build configuration list for PBXNativeTarget "InspectorExampleApp" */;
+			buildPhases = (
+				C1FE2D1D2220678908F2C1C3 /* Sources */,
+				70ED97F712FBF0BA6EC75E75 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = InspectorExampleApp;
+			packageProductDependencies = (
+				070B90B4F1D23B097FE934DC /* InspectorCore */,
+				24AED34AF10B2B055B81449C /* InspectorOpenTelemetry */,
+				8A672EB2071EECA2D02A73F1 /* InspectorSwiftUI */,
+				E152DEAD172D73F2FA549839 /* OpenTelemetryApi */,
+				393A5786FD89F2EEF920AB6E /* OpenTelemetrySdk */,
+				71B1A19A37AFAD1DFBA29113 /* StdoutExporter */,
+			);
+			productName = InspectorExampleApp;
+			productReference = 83D27E57F927A53F619615D3 /* InspectorExampleApp.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		D040E087879EE15E3EA9D736 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					F9B5F85D5FB53E7698E2C24B = {
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = B766D5D03D250F06B1AA2269 /* Build configuration list for PBXProject "InspectorExample" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 1C61A51A6DE80B527525E22B;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				BC9F8044E8732C2D02603A01 /* XCRemoteSwiftPackageReference "opentelemetry-swift-core" */,
+				EECC5880F87D1DB63ED10034 /* XCLocalSwiftPackageReference "../.." */,
+			);
+			preferredProjectObjectVersion = 77;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				F9B5F85D5FB53E7698E2C24B /* InspectorExampleApp */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		C1FE2D1D2220678908F2C1C3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2BDDC2E1A6F92DBDF18F0E86 /* InspectorExampleApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		026BC4A32BC693D7603EFE04 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		250F5EF45047F0700323B928 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		336CA3F99D6086BA3743434F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.2.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ajevans.SwiftOTelInspector.Example;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		AE1BD34AC376C35A83776114 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.2.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ajevans.SwiftOTelInspector.Example;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		B766D5D03D250F06B1AA2269 /* Build configuration list for PBXProject "InspectorExample" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				026BC4A32BC693D7603EFE04 /* Debug */,
+				250F5EF45047F0700323B928 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		EEA0F7743BABF59A25BD116D /* Build configuration list for PBXNativeTarget "InspectorExampleApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				336CA3F99D6086BA3743434F /* Debug */,
+				AE1BD34AC376C35A83776114 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		EECC5880F87D1DB63ED10034 /* XCLocalSwiftPackageReference "../.." */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../..;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		BC9F8044E8732C2D02603A01 /* XCRemoteSwiftPackageReference "opentelemetry-swift-core" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/open-telemetry/opentelemetry-swift-core.git";
+			requirement = {
+				kind = exactVersion;
+				version = 2.5.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		070B90B4F1D23B097FE934DC /* InspectorCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = InspectorCore;
+		};
+		24AED34AF10B2B055B81449C /* InspectorOpenTelemetry */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = InspectorOpenTelemetry;
+		};
+		393A5786FD89F2EEF920AB6E /* OpenTelemetrySdk */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BC9F8044E8732C2D02603A01 /* XCRemoteSwiftPackageReference "opentelemetry-swift-core" */;
+			productName = OpenTelemetrySdk;
+		};
+		71B1A19A37AFAD1DFBA29113 /* StdoutExporter */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BC9F8044E8732C2D02603A01 /* XCRemoteSwiftPackageReference "opentelemetry-swift-core" */;
+			productName = StdoutExporter;
+		};
+		8A672EB2071EECA2D02A73F1 /* InspectorSwiftUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = InspectorSwiftUI;
+		};
+		E152DEAD172D73F2FA549839 /* OpenTelemetryApi */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BC9F8044E8732C2D02603A01 /* XCRemoteSwiftPackageReference "opentelemetry-swift-core" */;
+			productName = OpenTelemetryApi;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = D040E087879EE15E3EA9D736 /* Project object */;
+}

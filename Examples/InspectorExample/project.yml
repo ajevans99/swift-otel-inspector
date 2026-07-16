@@ -1,0 +1,50 @@
+name: InspectorExample
+options:
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+packages:
+  SwiftOTelInspector:
+    path: ../..
+  OpenTelemetry:
+    url: https://github.com/open-telemetry/opentelemetry-swift-core.git
+    exactVersion: 2.5.1
+targets:
+  InspectorExampleApp:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources/InspectorExampleApp
+    dependencies:
+      - package: SwiftOTelInspector
+        product: InspectorCore
+      - package: SwiftOTelInspector
+        product: InspectorOpenTelemetry
+      - package: SwiftOTelInspector
+        product: InspectorSwiftUI
+      - package: OpenTelemetry
+        product: OpenTelemetryApi
+      - package: OpenTelemetry
+        product: OpenTelemetrySdk
+      - package: OpenTelemetry
+        product: StdoutExporter
+    settings:
+      base:
+        CODE_SIGN_STYLE: Automatic
+        CURRENT_PROJECT_VERSION: 1
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        MARKETING_VERSION: 0.2.0
+        PRODUCT_BUNDLE_IDENTIFIER: com.ajevans.SwiftOTelInspector.Example
+        SWIFT_VERSION: 6.0
+        TARGETED_DEVICE_FAMILY: "1,2"
+schemes:
+  InspectorExampleApp:
+    build:
+      targets:
+        InspectorExampleApp: all
+    run:
+      config: Debug
+    archive:
+      config: Release

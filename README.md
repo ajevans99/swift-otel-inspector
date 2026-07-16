@@ -159,9 +159,10 @@ open SwiftOTelInspector.xcworkspace
 ```
 
 Select the `InspectorExampleApp` scheme and run it on an iOS 17 simulator or
-macOS. The example is a separate package consumer that emits correlated spans,
-logs, and continuously changing metrics. It presents dedicated trace, log, and
-metric tabs, including live counter-rate, gauge, and histogram charts.
+device. The native Xcode app target consumes the package through its public
+products, emits correlated spans, logs, and continuously changing metrics, and
+presents dedicated trace, log, and metric tabs, including live counter-rate,
+gauge, and histogram charts.
 
 ### Compose with remote export
 
@@ -237,7 +238,7 @@ curl \
   http://localhost:4318/v1/metrics
 ```
 
-## Version 0.1: traces
+## Initial trace milestone
 
 The first release stays deliberately narrow and inspects completed
 spans only. Live or active-span inspection requires lifecycle observation beyond
@@ -312,9 +313,10 @@ Sensitive attributes should be rejected or transformed before entering the local
 store. Hiding values only in the UI still leaves private data resident in memory
 or diagnostic exports.
 
-Version 0.1 truncates all attribute values to a configurable maximum and
-provides a redaction hook that runs before snapshots enter the store. Applications
-remain responsible for choosing which domain-specific attributes are safe.
+The initial release truncates all attribute values to a configurable maximum
+and provides a redaction hook that runs before snapshots enter the store.
+Applications remain responsible for choosing which domain-specific attributes
+are safe.
 
 ### Make the viewer optional
 
@@ -377,9 +379,8 @@ content, application domain identifiers, or other private payloads.
 
 ## Status
 
-Version 0.1 provides completed trace inspection. Current development adds
-correlated logs and metrics with bounded stores, OpenTelemetry Swift exporters,
-a unified trace timeline, a searchable severity-aware log browser, and a Swift
-Charts metric browser for gauges, counter rates, sums, summaries, and explicit
-or exponential histograms. Persistence and active-span inspection remain future
-work.
+Version 0.2 provides completed trace inspection plus correlated logs and metrics
+with bounded stores, OpenTelemetry Swift exporters, a unified trace timeline, a
+searchable severity-aware log browser, and a Swift Charts metric browser for
+gauges, counter rates, sums, summaries, and explicit or exponential histograms.
+Persistence and active-span inspection remain future work.
