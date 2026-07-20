@@ -107,8 +107,8 @@ import InspectorSwiftUI
 import OpenTelemetrySdk
 import SwiftUI
 
-let store = TraceStore(
-    configuration: TraceStoreConfiguration(
+let inspector = InspectorTelemetry(
+    traceConfiguration: TraceStoreConfiguration(
         maximumSpanCount: 1_000,
         maximumEstimatedBytes: 5_000_000,
         maximumAge: .seconds(3_600),
@@ -118,20 +118,18 @@ let store = TraceStore(
         key == "user.email" ? nil : value
     }
 )
+let exporters = inspector.makeExporters()
 
-let inspectorExporter = InspectorSpanExporter(store: store)
-let processor = BatchSpanProcessor(spanExporter: inspectorExporter)
+let processor = BatchSpanProcessor(spanExporter: exporters.spanExporter)
 let tracerProvider = TracerProviderSdk(spanProcessors: [processor])
 
-let logStore = LogStore()
-let logExporter = InspectorLogExporter(store: logStore)
 let loggerProvider = LoggerProviderSdk(
-    logRecordProcessors: [SimpleLogRecordProcessor(logRecordExporter: logExporter)]
+    logRecordProcessors: [
+        SimpleLogRecordProcessor(logRecordExporter: exporters.logExporter)
+    ]
 )
 
-let metricStore = MetricStore()
-let metricExporter = InspectorMetricExporter(store: metricStore)
-let metricReader = PeriodicMetricReaderBuilder(exporter: metricExporter)
+let metricReader = PeriodicMetricReaderBuilder(exporter: exporters.metricExporter)
     .setInterval(timeInterval: 5)
     .build()
 let meterProvider = MeterProviderSdk.builder()
@@ -146,9 +144,9 @@ let meterProvider = MeterProviderSdk.builder()
 Embed the viewer wherever developer diagnostics belong:
 
 ```swift
-TraceInspectorView(store: store, logStore: logStore)
-LogInspectorView(store: logStore)
-MetricInspectorView(store: metricStore)
+TraceInspectorView(store: inspector.traceStore, logStore: inspector.logStore)
+LogInspectorView(store: inspector.logStore)
+MetricInspectorView(store: inspector.metricStore)
 ```
 
 Open the repository workspace in Xcode to browse the library and example
@@ -171,7 +169,7 @@ should inspect and remotely export the same sampled spans:
 
 ```swift
 let exporter = MultiSpanExporter(
-    spanExporters: [inspectorExporter, remoteExporter]
+    spanExporters: [exporters.spanExporter, remoteExporter]
 )
 let processor = BatchSpanProcessor(spanExporter: exporter)
 ```
@@ -183,6 +181,95 @@ register separate span processors instead.
 For metrics, register separate metric readers when the same instruments should
 feed the local inspector and a remote exporter. Each reader owns its exporter,
 collection interval, temporality, flush, and shutdown lifecycle.
+
+### DEBUG-only application embedding
+
+SwiftPM cannot condition a target dependency on the debug build configuration.
+To guarantee the inspector is absent from release linkage, put the adapter in a
+dedicated debug-only target. Link that target and the inspector products only
+from a debug application target or scheme; the production application target
+must not declare either dependency:
+
+```swift
+.target(
+    name: "AppDebugDiagnostics",
+    dependencies: [
+        "AppRuntime",
+        .product(
+            name: "InspectorOpenTelemetry",
+            package: "swift-otel-inspector"
+        ),
+        .product(
+            name: "InspectorSwiftUI",
+            package: "swift-otel-inspector"
+        ),
+        .product(
+            name: "ComposableOTelExporters",
+            package: "swift-composable-otel"
+        ),
+    ]
+)
+```
+
+Create and retain exactly one composition root in that adapter. Momentum chooses
+one stdout-or-OTLP pipeline for the process, so make one exporter set for that
+active runtime:
+
+```swift
+import ComposableOTelExporters
+import InspectorOpenTelemetry
+import InspectorSwiftUI
+
+let inspector = InspectorTelemetry(
+    redactor: { key, value in
+        key == "user.email" ? nil : value
+    }
+)
+
+let inspectorExporters = inspector.makeExporters()
+let observerExporters = TelemetryObserverExporters(
+    spanExporters: [inspectorExporters.spanExporter],
+    logRecordExporters: [inspectorExporters.logExporter],
+    metricExporters: [inspectorExporters.metricExporter]
+)
+```
+
+Pass `observerExporters` as the final `observerExporters:` argument to the
+stdout or OTLP `TelemetryBootstrap.configure(...)` call or
+`TelemetryRuntime.Configuration` initializer. These are independent post-privacy
+exporters; `swift-composable-otel` propagates the active runtime's full flush and
+shutdown lifecycle to them.
+
+Do not separately shut down an inspector exporter while its runtime is active.
+Shutdown is terminal, so make a fresh set before attaching the same stores to a
+later runtime. A flush waits for previously accepted snapshots to reach the
+actor-owned store, while runtime lifecycle propagation first flushes the
+processors and readers that may still hold queued telemetry. Attaching sets to
+multiple concurrently active runtimes records the same signals more than once.
+For metrics, the runtime gives the observer exporter an independent reader so
+its temporality and lifecycle do not interfere with stdout or OTLP export.
+
+The three browser views each own their navigation split view. A diagnostics
+screen can place them in tabs without wrapping them in another navigation
+container:
+
+```swift
+TabView {
+    TraceInspectorView(
+        store: inspector.traceStore,
+        logStore: inspector.logStore
+    )
+    .tabItem {
+        Label("Traces", systemImage: "point.3.connected.trianglepath.dotted")
+    }
+
+    LogInspectorView(store: inspector.logStore)
+        .tabItem { Label("Logs", systemImage: "text.alignleft") }
+
+    MetricInspectorView(store: inspector.metricStore)
+        .tabItem { Label("Metrics", systemImage: "chart.xyaxis.line") }
+}
+```
 
 ### Privacy and limits
 

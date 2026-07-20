@@ -34,9 +34,11 @@ import InspectorCore
 import InspectorOpenTelemetry
 import InspectorSwiftUI
 
-let store = TraceStore()
-_ = InspectorSpanExporter(store: store)
-_ = TraceInspectorView(store: store)
+let telemetry = InspectorTelemetry()
+_ = telemetry.makeExporters()
+_ = TraceInspectorView(store: telemetry.traceStore, logStore: telemetry.logStore)
+_ = LogInspectorView(store: telemetry.logStore)
+_ = MetricInspectorView(store: telemetry.metricStore)
 print(InspectorCore.version)
 EOF
 
