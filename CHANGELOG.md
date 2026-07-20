@@ -5,6 +5,17 @@ this project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-07-20
+
+### Added
+
+- `InspectorTelemetry`, a small composition root that retains one bounded trace,
+  log, and metric store set and creates lifecycle-scoped
+  `InspectorExporterSet` values.
+- A DEBUG-only consumer recipe for adapting the active runtime's exporters to
+  `TelemetryObserverExporters`, presenting tabbed SwiftUI
+  diagnostics, and preserving runtime-owned flush and shutdown behavior.
+
 ## [0.2.0] - 2026-07-16
 
 ### Added

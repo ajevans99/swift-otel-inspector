@@ -3,5 +3,5 @@ import Testing
 
 @Test
 func packageVersion() {
-    #expect(InspectorOpenTelemetry.version == "0.2.0")
+    #expect(InspectorOpenTelemetry.version == "0.3.0")
 }
