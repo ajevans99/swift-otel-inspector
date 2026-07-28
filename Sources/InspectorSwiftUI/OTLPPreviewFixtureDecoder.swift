@@ -1,3 +1,5 @@
+#if !os(watchOS)
+
 #if DEBUG
 import Foundation
 import InspectorCore
@@ -433,4 +435,7 @@ private struct ArrayValue: Decodable {
 private struct KeyValueList: Decodable {
     let values: [KeyValue]
 }
+#endif
+
+
 #endif

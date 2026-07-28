@@ -1,3 +1,5 @@
+#if !os(watchOS)
+
 import InspectorCore
 import SwiftUI
 
@@ -241,3 +243,6 @@ enum LogStyle {
         )
     }
 }
+
+
+#endif

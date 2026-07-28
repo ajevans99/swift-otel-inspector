@@ -1,3 +1,5 @@
+#if !os(watchOS)
+
 import InspectorCore
 import SwiftUI
 
@@ -18,3 +20,6 @@ public struct InspectorPlaceholderView: View {
         .padding()
     }
 }
+
+
+#endif

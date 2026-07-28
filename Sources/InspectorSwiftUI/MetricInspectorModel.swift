@@ -1,3 +1,5 @@
+#if !os(watchOS)
+
 import InspectorCore
 import SwiftUI
 
@@ -71,3 +73,6 @@ public final class MetricInspectorModel: ObservableObject {
         Set(metrics.compactMap(\.resource.serviceName)).sorted()
     }
 }
+
+
+#endif

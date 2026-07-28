@@ -1,3 +1,5 @@
+#if !os(watchOS)
+
 import Foundation
 import InspectorCore
 
@@ -183,3 +185,6 @@ public enum MetricPresentation {
         return value.formatted(.number.precision(.fractionLength(0 ... 2)))
     }
 }
+
+
+#endif

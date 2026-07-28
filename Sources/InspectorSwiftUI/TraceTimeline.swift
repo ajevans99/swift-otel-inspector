@@ -1,3 +1,5 @@
+#if !os(watchOS)
+
 import InspectorCore
 
 public struct TraceTimelineItem: Identifiable, Hashable, Sendable {
@@ -69,3 +71,6 @@ public struct TraceTimelineItem: Identifiable, Hashable, Sendable {
         }
     }
 }
+
+
+#endif

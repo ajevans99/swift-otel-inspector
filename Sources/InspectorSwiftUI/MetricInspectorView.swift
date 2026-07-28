@@ -1,3 +1,5 @@
+#if !os(watchOS)
+
 import Charts
 import InspectorCore
 import SwiftUI
@@ -402,3 +404,6 @@ private enum MetricStyle {
         }
     }
 }
+
+
+#endif
