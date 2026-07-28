@@ -1,3 +1,5 @@
+#if !os(watchOS)
+
 import InspectorCore
 import SwiftUI
 
@@ -408,3 +410,6 @@ private extension SpanTreeNode {
         children.isEmpty ? nil : children
     }
 }
+
+
+#endif

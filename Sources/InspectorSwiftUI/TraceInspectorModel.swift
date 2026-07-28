@@ -1,3 +1,5 @@
+#if !os(watchOS)
+
 import InspectorCore
 import SwiftUI
 
@@ -166,3 +168,6 @@ public final class TraceInspectorModel: ObservableObject {
             : 0
     }
 }
+
+
+#endif

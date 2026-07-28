@@ -1,3 +1,5 @@
+#if !os(watchOS)
+
 #if DEBUG
 import Foundation
 import InspectorCore
@@ -28,4 +30,7 @@ private func previewStore() -> TraceStore {
     }
     return store
 }
+#endif
+
+
 #endif

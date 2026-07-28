@@ -1,3 +1,5 @@
+#if !os(watchOS)
+
 import InspectorCore
 
 public struct SpanWaterfallItem: Identifiable, Equatable, Sendable {
@@ -49,3 +51,6 @@ public enum SpanWaterfallLayout {
         return trace.roots.flatMap { flatten($0, depth: 0) }
     }
 }
+
+
+#endif

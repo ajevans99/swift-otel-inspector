@@ -1,3 +1,5 @@
+#if !os(watchOS)
+
 import Foundation
 import InspectorCore
 
@@ -56,3 +58,6 @@ public enum InspectorFormatting {
         }
     }
 }
+
+
+#endif

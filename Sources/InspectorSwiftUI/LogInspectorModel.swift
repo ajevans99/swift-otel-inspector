@@ -1,3 +1,5 @@
+#if !os(watchOS)
+
 import InspectorCore
 import SwiftUI
 
@@ -80,3 +82,6 @@ public final class LogInspectorModel: ObservableObject {
         Set(logs.compactMap(\.resource.serviceName)).sorted()
     }
 }
+
+
+#endif
