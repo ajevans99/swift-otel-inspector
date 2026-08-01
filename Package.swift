@@ -21,23 +21,18 @@ let package = Package(
         ),
     ],
     targets: [
-        .target(
-            name: "InspectorCore",
-            resources: [.copy("InspectorCore.docc")]
-        ),
+        .target(name: "InspectorCore"),
         .target(
             name: "InspectorOpenTelemetry",
             dependencies: [
                 "InspectorCore",
                 .product(name: "OpenTelemetryApi", package: "opentelemetry-swift-core"),
                 .product(name: "OpenTelemetrySdk", package: "opentelemetry-swift-core"),
-            ],
-            resources: [.copy("InspectorOpenTelemetry.docc")]
+            ]
         ),
         .target(
             name: "InspectorSwiftUI",
-            dependencies: ["InspectorCore"],
-            resources: [.copy("InspectorSwiftUI.docc")]
+            dependencies: ["InspectorCore"]
         ),
         .testTarget(
             name: "InspectorCoreTests",
