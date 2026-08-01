@@ -2,6 +2,12 @@
 
 import PackageDescription
 
+#if TUIST
+let documentationCatalogResourceSuffix = "/**"
+#else
+let documentationCatalogResourceSuffix = ""
+#endif
+
 let package = Package(
     name: "SwiftOTelInspector",
     platforms: [
@@ -23,7 +29,7 @@ let package = Package(
     targets: [
         .target(
             name: "InspectorCore",
-            resources: [.copy("InspectorCore.docc")]
+            resources: [.copy("InspectorCore.docc\(documentationCatalogResourceSuffix)")]
         ),
         .target(
             name: "InspectorOpenTelemetry",
@@ -32,12 +38,14 @@ let package = Package(
                 .product(name: "OpenTelemetryApi", package: "opentelemetry-swift-core"),
                 .product(name: "OpenTelemetrySdk", package: "opentelemetry-swift-core"),
             ],
-            resources: [.copy("InspectorOpenTelemetry.docc")]
+            resources: [
+                .copy("InspectorOpenTelemetry.docc\(documentationCatalogResourceSuffix)")
+            ]
         ),
         .target(
             name: "InspectorSwiftUI",
             dependencies: ["InspectorCore"],
-            resources: [.copy("InspectorSwiftUI.docc")]
+            resources: [.copy("InspectorSwiftUI.docc\(documentationCatalogResourceSuffix)")]
         ),
         .testTarget(
             name: "InspectorCoreTests",
